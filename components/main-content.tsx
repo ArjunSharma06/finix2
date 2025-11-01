@@ -3,16 +3,15 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import TransactionTable from "./transaction-table"
 
-// Realistic spending data for 2024
 const spendingData = [
-  { month: "Jan", amount: 2850, budget: 3500 },
-  { month: "Feb", amount: 3120, budget: 3500 },
-  { month: "Mar", amount: 2650, budget: 3500 },
-  { month: "Apr", amount: 3890, budget: 3500 },
-  { month: "May", amount: 3420, budget: 3500 },
-  { month: "Jun", amount: 3740, budget: 3500 },
-  { month: "Jul", amount: 4120, budget: 3500 },
-  { month: "Aug", amount: 3560, budget: 3500 },
+  { month: "Jan", amount: 28500, budget: 35000 },
+  { month: "Feb", amount: 31200, budget: 35000 },
+  { month: "Mar", amount: 26500, budget: 35000 },
+  { month: "Apr", amount: 38900, budget: 35000 },
+  { month: "May", amount: 34200, budget: 35000 },
+  { month: "Jun", amount: 37400, budget: 35000 },
+  { month: "Jul", amount: 41200, budget: 35000 },
+  { month: "Aug", amount: 35600, budget: 35000 },
 ]
 
 export default function MainContent() {
@@ -33,7 +32,7 @@ export default function MainContent() {
         {/* Current Month Spending */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">This Month</p>
-          <p className="text-2xl font-bold text-foreground">${currentMonth.amount.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">₹{currentMonth.amount.toLocaleString("en-IN")}</p>
           <p className={`text-xs mt-2 ${percentageChange > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
             {percentageChange > 0 ? "+" : ""}
             {percentageChange}% from last month
@@ -43,9 +42,9 @@ export default function MainContent() {
         {/* Budget */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
-          <p className="text-2xl font-bold text-foreground">${currentMonth.budget.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">₹{currentMonth.budget.toLocaleString("en-IN")}</p>
           <p className="text-xs mt-2 text-green-600 font-medium">
-            {(currentMonth.budget - currentMonth.amount).toLocaleString()} remaining
+            ₹{(currentMonth.budget - currentMonth.amount).toLocaleString("en-IN")} remaining
           </p>
         </div>
 
@@ -53,7 +52,7 @@ export default function MainContent() {
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Year to Date</p>
           <p className="text-2xl font-bold text-foreground">
-            ${spendingData.reduce((sum, d) => sum + d.amount, 0).toLocaleString()}
+            ₹{spendingData.reduce((sum, d) => sum + d.amount, 0).toLocaleString("en-IN")}
           </p>
           <p className="text-xs mt-2 text-muted-foreground font-medium">8 months tracked</p>
         </div>
@@ -95,7 +94,7 @@ export default function MainContent() {
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
-              formatter={(value) => `$${value.toLocaleString()}`}
+              formatter={(value) => `₹${value.toLocaleString("en-IN")}`}
             />
             <Area
               type="monotone"

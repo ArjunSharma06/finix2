@@ -32,7 +32,7 @@ export default function LandingPage() {
         <div className="text-center space-y-8">
           <div className="space-y-4">
             <h1 className="text-5xl md:text-6xl font-bold text-foreground text-balance leading-tight">
-              Smart Financial Management Made Simple
+              FINIX.
             </h1>
             <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto">
               Track spending, split bills, and get AI-powered insights. Take control of your finances with FINIX.
@@ -60,7 +60,8 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-foreground mb-4">finix.</h2>
+          <h2 className="text-4xl font-bold text-foreground mb-4">FINIX.
+</h2>
           <p className="text-lg text-muted-foreground">Everything you need for complete financial control</p>
         </div>
 

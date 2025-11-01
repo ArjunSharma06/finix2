@@ -17,29 +17,29 @@ import {
 import { TrendingDown, Filter, Download } from "lucide-react"
 
 const expensesData = [
-  { month: "Jan", groceries: 280, transport: 150, entertainment: 95, utilities: 120 },
-  { month: "Feb", groceries: 320, transport: 160, entertainment: 110, utilities: 125 },
-  { month: "Mar", groceries: 290, transport: 145, entertainment: 100, utilities: 120 },
-  { month: "Apr", groceries: 350, transport: 170, entertainment: 130, utilities: 135 },
-  { month: "May", groceries: 310, transport: 155, entertainment: 115, utilities: 128 },
-  { month: "Jun", groceries: 340, transport: 165, entertainment: 120, utilities: 130 },
+  { month: "Jan", groceries: 2800, transport: 1500, entertainment: 950, utilities: 1200 },
+  { month: "Feb", groceries: 3200, transport: 1600, entertainment: 1100, utilities: 1250 },
+  { month: "Mar", groceries: 2900, transport: 1450, entertainment: 1000, utilities: 1200 },
+  { month: "Apr", groceries: 3500, transport: 1700, entertainment: 1300, utilities: 1350 },
+  { month: "May", groceries: 3100, transport: 1550, entertainment: 1150, utilities: 1280 },
+  { month: "Jun", groceries: 3400, transport: 1650, entertainment: 1200, utilities: 1300 },
 ]
 
 const categoryData = [
-  { name: "Groceries", value: 1890, percentage: 32 },
-  { name: "Transport", value: 945, percentage: 16 },
-  { name: "Entertainment", value: 670, percentage: 11 },
-  { name: "Utilities", value: 738, percentage: 13 },
-  { name: "Dining", value: 825, percentage: 14 },
-  { name: "Others", value: 882, percentage: 14 },
+  { name: "Groceries", value: 18900, percentage: 32 },
+  { name: "Transport", value: 9450, percentage: 16 },
+  { name: "Entertainment", value: 6700, percentage: 11 },
+  { name: "Utilities", value: 7380, percentage: 13 },
+  { name: "Dining", value: 8250, percentage: 14 },
+  { name: "Others", value: 8820, percentage: 14 },
 ]
 
 const recentExpenses = [
-  { id: 1, category: "Groceries", amount: -85, date: "Nov 2, 2024", vendor: "Whole Foods", icon: "🛒" },
-  { id: 2, category: "Transport", amount: -45, date: "Nov 1, 2024", vendor: "Uber", icon: "🚗" },
-  { id: 3, category: "Dining", amount: -62, date: "Oct 31, 2024", vendor: "Restaurant XYZ", icon: "🍽️" },
-  { id: 4, category: "Entertainment", amount: -25, date: "Oct 30, 2024", vendor: "Netflix", icon: "🎬" },
-  { id: 5, category: "Utilities", amount: -120, date: "Oct 28, 2024", vendor: "Electric Bill", icon: "⚡" },
+  { id: 1, category: "Groceries", amount: -850, date: "Nov 2, 2024", vendor: "BigBasket", icon: "🛒" },
+  { id: 2, category: "Transport", amount: -450, date: "Nov 1, 2024", vendor: "Uber", icon: "🚗" },
+  { id: 3, category: "Dining", amount: -620, date: "Oct 31, 2024", vendor: "Restaurant XYZ", icon: "🍽️" },
+  { id: 4, category: "Entertainment", amount: -250, date: "Oct 30, 2024", vendor: "Netflix", icon: "🎬" },
+  { id: 5, category: "Utilities", amount: -1200, date: "Oct 28, 2024", vendor: "Electric Bill", icon: "⚡" },
 ]
 
 const COLORS = ["#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#8b5cf6", "#ec4899"]
@@ -97,13 +97,13 @@ export default function ExpensesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-border hover:shadow-lg transition-all duration-300">
           <p className="text-muted-foreground text-sm mb-2">Total Expenses</p>
-          <p className="text-3xl font-bold text-foreground">${totalExpenses.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-foreground">₹{totalExpenses.toLocaleString("en-IN")}</p>
           <p className="text-xs text-emerald-600 mt-2">+12% from last period</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-border hover:shadow-lg transition-all duration-300">
           <p className="text-muted-foreground text-sm mb-2">Average Monthly</p>
           <p className="text-3xl font-bold text-foreground">
-            ${avgMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            ₹{avgMonthly.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
           </p>
           <p className="text-xs text-muted-foreground mt-2">Based on 6 months</p>
         </div>
@@ -129,7 +129,10 @@ export default function ExpensesPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="month" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px" }}
+                formatter={(value) => `₹${value.toLocaleString("en-IN")}`}
+              />
               <Legend />
               <Bar dataKey="groceries" fill="#10b981" radius={[8, 8, 0, 0]} />
               <Bar dataKey="transport" fill="#14b8a6" radius={[8, 8, 0, 0]} />
@@ -157,7 +160,7 @@ export default function ExpensesPage() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `$${value}`} />
+              <Tooltip formatter={(value) => `₹${value.toLocaleString("en-IN")}`} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -180,7 +183,7 @@ export default function ExpensesPage() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-red-600">${Math.abs(expense.amount)}</p>
+                <p className="font-semibold text-red-600">₹{Math.abs(expense.amount).toLocaleString("en-IN")}</p>
                 <p className="text-sm text-muted-foreground">{expense.category}</p>
               </div>
             </div>
