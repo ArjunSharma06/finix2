@@ -5,7 +5,6 @@ user transactions and travel goals using Groq API.
 """
 
 import os
-from groq import Groq
 import pandas as pd
 from datetime import date, datetime
 from decimal import Decimal
@@ -34,6 +33,8 @@ class AIEngine:
         if not mock_mode:
             if not api_key:
                 raise ValueError("GROQ_API_KEY environment variable is required")
+            # Lazy import Groq only when needed (not in mock mode)
+            from groq import Groq
             self.client = Groq(api_key=api_key)
         else:
             self.client = None
@@ -299,6 +300,106 @@ Be specific with numbers and make it personal. Reference the destination if prov
             travel_goal_name=travel_goal.name,
             target_amount=travel_goal.target_amount,
             current_saved=travel_goal.current_saved,
+            remaining_amount=savings_metrics["remaining_amount"],
+            average_monthly_spending=analysis["average_monthly_spending"],
+            non_essential_spending=analysis["non_essential_spending"],
+            months_to_goal_current=savings_metrics["months_to_goal_current"],
+            months_to_goal_optimized=savings_metrics["months_to_goal_optimized"],
+            suggestions=suggestions,
+            generated_at=datetime.now()
+        )
+
+    def generate_suggestions_stateless(
+        self,
+        transactions_data: List[Dict],
+        travel_goal_data: Dict
+    ) -> AISuggestionResponse:
+        """
+        Generate AI suggestions from in-memory data (stateless - no database).
+        Used for Round 1 Prototype.
+        
+        Args:
+            transactions_data: List of transaction dictionaries with keys: amount, category, currency, date, description
+            travel_goal_data: Dictionary with keys: name, target_amount, current_saved, target_date, destination
+            
+        Returns:
+            AISuggestionResponse with personalized suggestions
+        """
+        from datetime import datetime
+        from decimal import Decimal
+        
+        # Create mock Transaction objects from dictionaries
+        class MockTransaction:
+            def __init__(self, data):
+                self.amount = Decimal(str(data['amount']))
+                self.category = data['category']
+                self.currency = data.get('currency', 'USD')
+                self.date = data['date'] if isinstance(data['date'], date) else date.fromisoformat(str(data['date']))
+                self.description = data.get('description')
+        
+        # Create mock TravelGoal object
+        class MockTravelGoal:
+            def __init__(self, data):
+                self.name = data['name']
+                self.target_amount = Decimal(str(data['target_amount']))
+                self.current_saved = Decimal(str(data.get('current_saved', 0)))
+                self.target_date = data.get('target_date')
+                if isinstance(self.target_date, str):
+                    self.target_date = date.fromisoformat(self.target_date)
+                self.destination = data.get('destination')
+        
+        mock_transactions = [MockTransaction(t) for t in transactions_data]
+        mock_travel_goal = MockTravelGoal(travel_goal_data)
+        
+        # Use existing analysis methods
+        analysis = self._analyze_transactions(mock_transactions, mock_travel_goal)
+        savings_metrics = self._calculate_savings_metrics(analysis, mock_travel_goal)
+        
+        # Generate LLM prompt
+        prompt = self._generate_llm_prompt(analysis, mock_travel_goal, savings_metrics)
+        
+        # Call Groq API (or use mock if in mock mode)
+        if self.mock_mode or self.client is None:
+            suggestions = self._generate_mock_suggestions(analysis, mock_travel_goal, savings_metrics)
+        else:
+            try:
+                response = self.client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model="llama-3.1-70b-versatile",
+                    temperature=0.7
+                )
+                response_text = response.choices[0].message.content.strip()
+                
+                # Parse JSON response
+                if "```json" in response_text:
+                    response_text = response_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in response_text:
+                    response_text = response_text.split("```")[1].split("```")[0].strip()
+                
+                import json
+                suggestions_data = json.loads(response_text)
+                
+                suggestions = [
+                    SavingsSuggestion(
+                        title=s["title"],
+                        description=s["description"],
+                        potential_savings=Decimal(str(s["potential_savings"])),
+                        impact=s["impact"],
+                        category=s.get("category")
+                    )
+                    for s in suggestions_data
+                ]
+            except Exception as e:
+                print(f"LLM API call failed: {str(e)}. Using mock suggestions.")
+                suggestions = self._generate_mock_suggestions(analysis, mock_travel_goal, savings_metrics)
+        
+        # Build response
+        user_id = travel_goal_data.get('user_id', 1)
+        return AISuggestionResponse(
+            user_id=user_id,
+            travel_goal_name=mock_travel_goal.name,
+            target_amount=mock_travel_goal.target_amount,
+            current_saved=mock_travel_goal.current_saved,
             remaining_amount=savings_metrics["remaining_amount"],
             average_monthly_spending=analysis["average_monthly_spending"],
             non_essential_spending=analysis["non_essential_spending"],

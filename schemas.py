@@ -123,3 +123,33 @@ class AISuggestionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# Stateless API Schemas (Round 1 Prototype - No Database)
+class StatelessTransactionInput(BaseModel):
+    """Schema for transaction input in stateless API calls."""
+    amount: Decimal = Field(..., gt=0)
+    category: str = Field(..., min_length=1, max_length=50)
+    currency: str = Field(default="USD", min_length=3, max_length=3)
+    date: date
+    description: Optional[str] = Field(None, max_length=255)
+
+
+class StatelessTravelGoalInput(BaseModel):
+    """Schema for travel goal input in stateless API calls."""
+    name: str = Field(..., min_length=1, max_length=255)
+    target_amount: Decimal = Field(..., gt=0)
+    current_saved: Decimal = Field(default=0.0, ge=0)
+    target_date: Optional[date] = None
+    destination: Optional[str] = Field(None, max_length=255)
+
+
+class SuggestionsCalculateRequest(BaseModel):
+    """Schema for stateless suggestions calculation request."""
+    transactions: List[StatelessTransactionInput] = Field(..., description="List of user transactions")
+    travel_goal: StatelessTravelGoalInput = Field(..., description="Travel goal information")
+    user_id: int = Field(default=1, description="User ID for response (not used for calculation)")
+
+
+class TransactionsSummaryRequest(BaseModel):
+    """Schema for stateless transaction summary request."""
+    transactions: List[StatelessTransactionInput] = Field(..., description="List of transactions to summarize")

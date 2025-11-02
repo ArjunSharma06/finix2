@@ -20,7 +20,9 @@ from schemas import (
     UserCreate, UserResponse,
     TransactionCreate, TransactionResponse,
     TravelGoalCreate, TravelGoalUpdate, TravelGoalResponse,
-    AISuggestionResponse
+    AISuggestionResponse,
+    SuggestionsCalculateRequest, TransactionsSummaryRequest,
+    StatelessTransactionInput
 )
 from ai_engine import AIEngine
 
@@ -478,6 +480,105 @@ async def get_ai_suggestions(user_id: int, db: Session = Depends(get_db)):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to generate suggestions: {str(fallback_error)}"
             )
+
+
+# ==================== STATELESS API ENDPOINTS (Round 1 Prototype) ====================
+
+@app.post("/suggestions/calculate", response_model=AISuggestionResponse)
+async def calculate_suggestions_stateless(request: SuggestionsCalculateRequest):
+    """
+    Calculate AI-generated savings suggestions from provided data (stateless - no database).
+    
+    This endpoint is for Round 1 Prototype where data is sent in the request body.
+    Perfect for frontend forms that collect user input manually.
+    
+    Args:
+        request: Contains transactions list and travel goal data
+        
+    Returns:
+        AI-generated savings suggestions with analysis
+    """
+    try:
+        # Create engine in mock mode for Round 1 Prototype (no API key required)
+        from ai_engine import AIEngine
+        engine = AIEngine(mock_mode=True)
+        
+        # Convert Pydantic models to dictionaries
+        transactions_data = [
+            {
+                "amount": t.amount,
+                "category": t.category,
+                "currency": t.currency,
+                "date": t.date,
+                "description": t.description
+            }
+            for t in request.transactions
+        ]
+        
+        travel_goal_data = {
+            "name": request.travel_goal.name,
+            "target_amount": request.travel_goal.target_amount,
+            "current_saved": request.travel_goal.current_saved,
+            "target_date": request.travel_goal.target_date,
+            "destination": request.travel_goal.destination,
+            "user_id": request.user_id
+        }
+        
+        # Generate suggestions using stateless method
+        suggestions = engine.generate_suggestions_stateless(transactions_data, travel_goal_data)
+        return suggestions
+        
+    except Exception as e:
+        print(f"Error generating stateless suggestions: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate suggestions: {str(e)}"
+        )
+
+
+@app.post("/transactions/summary")
+async def get_transaction_summary_stateless(request: TransactionsSummaryRequest):
+    """
+    Calculate transaction summary statistics from provided data (stateless - no database).
+    
+    This endpoint accepts a list of transactions and returns summary statistics.
+    Used for Round 1 Prototype with manual data input.
+    
+    Args:
+        request: Contains list of transactions
+        
+    Returns:
+        Summary statistics (total, average, categories breakdown)
+    """
+    try:
+        if not request.transactions:
+            return {
+                "total_transactions": 0,
+                "total_amount": 0,
+                "average_amount": 0,
+                "categories": {}
+            }
+        
+        total_amount = sum(float(t.amount) for t in request.transactions)
+        categories = {}
+        
+        for t in request.transactions:
+            category = t.category
+            amount = float(t.amount)
+            categories[category] = categories.get(category, 0) + amount
+        
+        return {
+            "total_transactions": len(request.transactions),
+            "total_amount": total_amount,
+            "average_amount": total_amount / len(request.transactions) if request.transactions else 0,
+            "categories": categories
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error calculating summary: {str(e)}"
+        )
 
 
 # Root endpoint

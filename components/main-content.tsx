@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import TransactionTable from "./transaction-table"
+import { Settings, DollarSign } from "lucide-react"
 
 const spendingData = [
   { month: "Jan", amount: 28500, budget: 35000 },
@@ -15,17 +17,111 @@ const spendingData = [
 ]
 
 export default function MainContent() {
+  const [showForm, setShowForm] = useState(false)
+  const [currentBalance, setCurrentBalance] = useState<number>(0)
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(3500)
+  const [formBalance, setFormBalance] = useState<string>("")
+  const [formBudget, setFormBudget] = useState<string>("")
+
   const currentMonth = spendingData[spendingData.length - 1]
   const previousMonth = spendingData[spendingData.length - 2]
   const percentageChange = (((currentMonth.amount - previousMonth.amount) / previousMonth.amount) * 100).toFixed(1)
 
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formBalance) {
+      setCurrentBalance(parseFloat(formBalance) || 0)
+    }
+    if (formBudget) {
+      setMonthlyBudget(parseFloat(formBudget) || 3500)
+    }
+    setShowForm(false)
+    setFormBalance("")
+    setFormBudget("")
+  }
+
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6">
       {/* Welcome Header with Animation */}
-      <div className="space-y-1 animate-fade-in">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, Sarah!</h1>
-        <p className="text-muted-foreground">Here's your financial overview for August</p>
+      <div className="space-y-1 animate-fade-in flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, Sarah!</h1>
+          <p className="text-muted-foreground">Here's your financial overview for August</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
+        >
+          <Settings className="w-4 h-4" />
+          Set Budget
+        </button>
       </div>
+
+      {/* Budget & Balance Form (Round 1 Prototype) */}
+      {showForm && (
+        <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            Set Your Financial Goals
+          </h3>
+          <form onSubmit={handleSubmitForm} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Current Balance ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formBalance}
+                  onChange={(e) => setFormBalance(e.target.value)}
+                  placeholder={currentBalance.toString()}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Monthly Budget ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formBudget}
+                  onChange={(e) => setFormBudget(e.target.value)}
+                  placeholder={monthlyBudget.toString()}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all font-medium"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setFormBalance("")
+                  setFormBudget("")
+                }}
+                className="px-6 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+          {currentBalance > 0 && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                Current Balance: <span className="font-semibold text-foreground">${currentBalance.toLocaleString()}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick Stats Row */}
       <div className="grid grid-cols-3 gap-4">
@@ -42,9 +138,9 @@ export default function MainContent() {
         {/* Budget */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
-          <p className="text-2xl font-bold text-foreground">₹{currentMonth.budget.toLocaleString("en-IN")}</p>
+          <p className="text-2xl font-bold text-foreground">${monthlyBudget.toLocaleString()}</p>
           <p className="text-xs mt-2 text-green-600 font-medium">
-            ₹{(currentMonth.budget - currentMonth.amount).toLocaleString("en-IN")} remaining
+            ${(monthlyBudget - currentMonth.amount).toLocaleString()} remaining
           </p>
         </div>
 
