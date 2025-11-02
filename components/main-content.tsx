@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import TransactionTable from "./transaction-table"
-import { Settings, DollarSign } from "lucide-react"
+import { Settings, IndianRupee } from "lucide-react"
 import { useFinixData } from "@/lib/data-context"
 
 export default function MainContent() {
@@ -12,7 +12,7 @@ export default function MainContent() {
   const [formBalance, setFormBalance] = useState<string>("")
   const [formBudget, setFormBudget] = useState<string>("")
   const [mounted, setMounted] = useState(false)
-  const [timeRange, setTimeRange] = useState<"3M" | "1Y">("3M")
+  const [timeRange, setTimeRange] = useState<"3M" | "6M" | "1Y">("3M")
 
   // Fix hydration issue
   useEffect(() => {
@@ -57,34 +57,37 @@ export default function MainContent() {
     ? (((currentMonthSpending - previousMonthSpending) / previousMonthSpending) * 100).toFixed(1)
     : "0.0"
 
-  // Generate spending data for graph (last 6 months)
+  // Generate spending data for graph based on selected time range (3M, 6M, 1Y)
   const spendingData = useMemo(() => {
     const months: { month: string; amount: number; budget: number }[] = []
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const now = new Date()
-    
-    for (let i = 5; i >= 0; i--) {
+
+    // Determine how many months to show
+    const monthsToShow = timeRange === "3M" ? 3 : timeRange === "6M" ? 6 : 12
+
+    for (let i = monthsToShow - 1; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const month = monthNames[date.getMonth()]
       const monthNum = date.getMonth()
       const year = date.getFullYear()
-      
+
       const monthSpending = transactions
         .filter((tx) => {
           const txDate = new Date(tx.date)
           return txDate.getMonth() === monthNum && txDate.getFullYear() === year
         })
         .reduce((sum, tx) => sum + tx.amount, 0)
-      
+
       months.push({
         month,
         amount: monthSpending,
         budget: monthlyBudget,
       })
     }
-    
+
     return months
-  }, [transactions, monthlyBudget])
+  }, [transactions, monthlyBudget, timeRange])
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault()
@@ -118,9 +121,9 @@ export default function MainContent() {
 
       {/* Budget & Balance Form (Round 1 Prototype) */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+        <div id="budget-form" className="bg-white rounded-xl border border-border p-6 space-y-4">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <DollarSign className="w-5 h-5" />
+            <IndianRupee className="w-5 h-5" />
             Set Your Financial Goals
           </h3>
           <form onSubmit={handleSubmitForm} className="space-y-4">
@@ -212,6 +215,23 @@ export default function MainContent() {
               <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
                 ₹{Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
               </p>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    // Open the Set Budget form and prefill with current monthly budget
+                    setFormBudget(monthlyBudget ? monthlyBudget.toString() : "")
+                    setShowForm(true)
+                    // Scroll to form when it becomes visible
+                    setTimeout(() => {
+                      const el = document.getElementById('budget-form')
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 100)
+                  }}
+                  className="text-xs px-3 py-1 rounded-md font-medium bg-white border border-slate-200 hover:shadow-sm"
+                >
+                  Adjust Goal
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -254,6 +274,16 @@ export default function MainContent() {
               }`}
             >
               3M
+            </button>
+            <button 
+              onClick={() => setTimeRange("6M")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "6M"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
+              6M
             </button>
             <button 
               onClick={() => setTimeRange("1Y")}

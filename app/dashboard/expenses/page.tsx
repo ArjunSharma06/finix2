@@ -14,7 +14,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { TrendingDown, Filter, Download, Plus, Minus } from "lucide-react"
+import { TrendingDown, Plus, Minus, ChevronLeft, Menu } from "lucide-react"
 import { useFinixData } from "@/lib/data-context"
 
 const COLORS = ["#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#8b5cf6", "#ec4899"]
@@ -30,26 +30,52 @@ export default function ExpensesPage() {
     description: "",
   })
 
-  // Calculate expenses from transactions
+  // Filter transactions based on selected time range
+  const getFilteredTransactions = useMemo(() => {
+    const now = new Date()
+    const monthsToSubtract = timeRange === "1m" ? 1 : 
+                            timeRange === "3m" ? 3 : 
+                            timeRange === "6m" ? 6 : 
+                            timeRange === "1y" ? 12 : 0
+    
+    const startDate = new Date(now)
+    if (monthsToSubtract > 0) {
+      startDate.setMonth(now.getMonth() - monthsToSubtract)
+    }
+    
+    return transactions.filter(tx => {
+      if (timeRange === "all") return true
+      const txDate = new Date(tx.date)
+      return txDate >= startDate && txDate <= now
+    })
+  }, [transactions, timeRange])
+
+  // Calculate expenses from filtered transactions
   const categoryData = useMemo(() => {
     const categories: Record<string, number> = {}
-    transactions.forEach((tx) => {
+    getFilteredTransactions.forEach((tx) => {
       categories[tx.category] = (categories[tx.category] || 0) + tx.amount
     })
 
     const total = Object.values(categories).reduce((sum, val) => sum + val, 0)
-    return Object.entries(categories).map(([name, value]) => ({
-      name,
-      value,
-      percentage: total > 0 ? Math.round((value / total) * 100) : 0,
-    }))
-  }, [transactions])
+    
+    // Sort by value (amount) in descending order
+    return Object.entries(categories)
+      .map(([name, value]) => ({
+        name,
+        value,
+        percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.value - a.value) // Sort by highest expense first
+  }, [getFilteredTransactions])
 
-  const totalExpenses = categoryData.reduce((sum, cat) => sum + cat.value, 0)
-  const avgMonthly = transactions.length > 0 ? totalExpenses / (transactions.length || 1) : 0
+  const totalExpenses = useMemo(() => categoryData.reduce((sum, cat) => sum + cat.value, 0), [categoryData])
+  const avgAmount = useMemo(() => getFilteredTransactions.length > 0 ? 
+    totalExpenses / getFilteredTransactions.length : 0, [totalExpenses, getFilteredTransactions])
 
   const recentExpenses = useMemo(() => {
-    return transactions
+    return getFilteredTransactions
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by date, newest first
       .slice(0, 5)
       .map((tx) => ({
         id: tx.id!,
@@ -73,7 +99,7 @@ export default function ExpensesPage() {
       category: transactionForm.category,
       date: transactionForm.date,
       description: transactionForm.description || undefined,
-      currency: "USD",
+      currency: "INR",
     })
 
     setTransactionForm({
@@ -88,6 +114,26 @@ export default function ExpensesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-6 h-6 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const event = new CustomEvent('toggle-sidebar', { detail: {} });
+            window.dispatchEvent(event);
+          }}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors lg:hidden"
+          aria-label="Toggle menu"
+        >
+          <Menu className="w-6 h-6 text-slate-600" />
+        </button>
+      </div>
+
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -99,16 +145,7 @@ export default function ExpensesPage() {
             </h1>
             <p className="text-muted-foreground mt-2">Track and analyze your spending patterns</p>
           </div>
-          <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
-              <Filter className="w-4 h-4" />
-              Filter
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
-              <Download className="w-4 h-4" />
-              Export
-            </button>
-          </div>
+          {/* Top-right space intentionally left empty */}
         </div>
 
         {/* Time Range Selector */}
@@ -144,7 +181,7 @@ export default function ExpensesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Amount ($) *
+                  Amount (₹) *
                 </label>
                 <input
                   type="number"
@@ -208,13 +245,13 @@ export default function ExpensesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-border hover:shadow-lg transition-all duration-300">
           <p className="text-muted-foreground text-sm mb-2">Total Expenses</p>
-          <p className="text-3xl font-bold text-foreground">${totalExpenses.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-2">{transactions.length} transactions</p>
+          <p className="text-3xl font-bold text-foreground">₹{totalExpenses.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-2">{getFilteredTransactions.length} transactions</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-border hover:shadow-lg transition-all duration-300">
           <p className="text-muted-foreground text-sm mb-2">Average Amount</p>
           <p className="text-3xl font-bold text-foreground">
-            ${avgMonthly.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            ₹{avgAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-muted-foreground mt-2">Per transaction</p>
         </div>
@@ -256,7 +293,7 @@ export default function ExpensesPage() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -275,7 +312,7 @@ export default function ExpensesPage() {
                     <span className="text-sm font-medium text-foreground">{cat.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">${cat.value.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-foreground">₹{cat.value.toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">{cat.percentage}%</p>
                   </div>
                 </div>
@@ -314,7 +351,7 @@ export default function ExpensesPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="font-semibold text-red-600">${Math.abs(expense.amount).toLocaleString()}</p>
+                    <p className="font-semibold text-red-600">₹{Math.abs(expense.amount).toLocaleString()}</p>
                     <p className="text-sm text-muted-foreground">{expense.category}</p>
                   </div>
                   <button

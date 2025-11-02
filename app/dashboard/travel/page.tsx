@@ -3,12 +3,114 @@
 import { Plane, MapPin, Calendar, Save, Edit2, DollarSign } from "lucide-react"
 import { useState, useMemo, useEffect } from "react"
 import { useFinixData } from "@/lib/data-context"
+import { generateTravelSuggestions } from "@/lib/utils"
+import type { TravelSuggestion } from "@/types/travel"
 
 interface BudgetCategory {
   category: string
   budget: number
   spent: number
 }
+
+// Define budget categories
+    // Accommodation suggestions
+    {
+      name: "Luxury Palace Hotel",
+      category: "accommodation",
+      price: Math.round(budgets.Accommodation / 30),
+      priceLabel: "per night",
+      rating: 4.8,
+      description: "5-star luxury hotel with stunning city views",
+      features: ["Spa", "Pool", "Fine Dining", "Butler Service"],
+      imageUrl: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb",
+      location: "City Center"
+    },
+    {
+      name: "Boutique Heritage Stay",
+      category: "accommodation",
+      price: Math.round(budgets.Accommodation / 40),
+      priceLabel: "per night",
+      rating: 4.6,
+      description: "Charming heritage property with modern amenities",
+      features: ["Heritage Tours", "Restaurant", "Garden", "Free WiFi"],
+      imageUrl: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
+      location: "Historic District"
+    },
+    // Flight suggestions
+    {
+      name: "Direct Premium Flight",
+      category: "flight",
+      price: Math.round(budgets.Flights * 0.8),
+      priceLabel: "round trip",
+      rating: 4.5,
+      description: "Premium direct flight with extra legroom",
+      features: ["Direct", "Meals Included", "Extra Baggage", "Lounge Access"],
+      imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05",
+      airline: "Emirates",
+      timing: "Morning Departure"
+    },
+    {
+      name: "Budget Connect Flight",
+      category: "flight",
+      price: Math.round(budgets.Flights * 0.5),
+      priceLabel: "round trip",
+      rating: 4.0,
+      description: "Economical flight with one short layover",
+      features: ["One Stop", "Meal Available", "Standard Baggage"],
+      imageUrl: "https://images.unsplash.com/photo-1556388158-158ea5ccacbd",
+      airline: "IndiGo",
+      timing: "Evening Departure"
+    },
+    // Restaurant suggestions
+    {
+      name: "Royal Spice Kitchen",
+      category: "restaurant",
+      price: 40,
+      priceLabel: "per person",
+      rating: 4.7,
+      description: "Authentic local cuisine in elegant settings",
+      features: ["Local Cuisine", "Fine Dining", "Vegetarian Options", "Bar"],
+      imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+      cuisine: "Local",
+      location: "Downtown"
+    },
+    {
+      name: "Sunset Cafe",
+      category: "restaurant",
+      price: 20,
+      priceLabel: "per person",
+      rating: 4.4,
+      description: "Cozy cafe with great breakfast and coffee",
+      features: ["Breakfast", "Coffee", "Pastries", "Outdoor Seating"],
+      imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
+      cuisine: "Cafe",
+      location: "Beachfront"
+    },
+    // Activity suggestions
+    {
+      name: "Cultural Heritage Tour",
+      category: "activity",
+      price: 30,
+      priceLabel: "per person",
+      rating: 4.9,
+      description: "Guided tour of historical landmarks",
+      features: ["Expert Guide", "Transport", "Lunch", "Photos"],
+      imageUrl: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b",
+      timing: "Full Day"
+    },
+    {
+      name: "Local Cooking Class",
+      category: "activity",
+      price: 45,
+      priceLabel: "per person",
+      rating: 4.8,
+      description: "Learn to cook authentic local dishes",
+      features: ["Ingredients", "Recipe Book", "Certificate", "Dinner"],
+      imageUrl: "https://images.unsplash.com/photo-1507048331197-7d4ac70811cf",
+      timing: "3 Hours"
+    }
+  ];
+};
 
 const DEFAULT_CATEGORIES = [
   { category: "Flights", budget: 0, spent: 0 },
@@ -23,6 +125,8 @@ export default function TravelPage() {
   const { travelGoal, setTravelGoal, transactions } = useFinixData()
   const [showForm, setShowForm] = useState(!travelGoal)
   const [showBudgetForm, setShowBudgetForm] = useState(false)
+  const [suggestions, setSuggestions] = useState<TravelSuggestion[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [formData, setFormData] = useState({
     name: travelGoal?.name || "",
     destination: travelGoal?.destination || "",
@@ -91,6 +195,34 @@ export default function TravelPage() {
     }))
   }, [budgetCategories, calculatedSpending])
 
+  // Fetch accommodation suggestions when travel goal or accommodation budget changes
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!travelGoal?.destination) return;
+      
+      const budgets = budgetCategories.reduce((acc, cat) => {
+        acc[cat.category] = cat.budget;
+        return acc;
+      }, {} as Record<string, number>);
+
+      setIsLoadingSuggestions(true);
+      try {
+        const newSuggestions = await generateTravelSuggestions(travelGoal.destination, budgets);
+        setSuggestions(newSuggestions);
+      } catch (error) {
+        console.error("Failed to fetch suggestions:", error);
+        // Show a more user-friendly error if API key is missing
+        if (error instanceof Error && error.message.includes('API key')) {
+          alert('Please configure the Groq API key in your environment variables.');
+        }
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    fetchSuggestions();
+  }, [travelGoal?.destination, budgetCategories]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const targetAmount = parseFloat(formData.target_amount)
@@ -131,12 +263,13 @@ export default function TravelPage() {
           </h1>
           <p className="text-muted-foreground">Set your travel savings goal</p>
         </div>
-        {travelGoal && !showForm && (
+        {!showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg text-white rounded-lg transition-all font-medium"
           >
-            Edit Goal
+            <Plane className="w-4 h-4" />
+            Add Goal
           </button>
         )}
       </div>
@@ -177,7 +310,7 @@ export default function TravelPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Target Amount ($) *
+                  Target Amount (₹) *
                 </label>
                 <input
                   type="number"
@@ -191,7 +324,7 @@ export default function TravelPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Currently Saved ($)
+                  Currently Saved (₹)
                 </label>
                 <input
                   type="number"
@@ -248,7 +381,14 @@ export default function TravelPage() {
       {/* Travel Goal Display */}
       {travelGoal && !showForm && (
         <>
-          <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-2xl p-8 mb-8 shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-2xl p-8 mb-8 shadow-lg hover:shadow-xl transition-all duration-300 relative">
+            <button
+              onClick={() => setShowForm(true)}
+              className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all font-medium"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Goal
+            </button>
             <div className="mb-6">
               <h2 className="text-3xl font-bold mb-2">{travelGoal.name}</h2>
               {travelGoal.destination && (
@@ -267,15 +407,15 @@ export default function TravelPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm opacity-80 mb-2">Target Amount</p>
-                <p className="text-2xl font-bold">${travelGoal.target_amount.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₹{travelGoal.target_amount.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm opacity-80 mb-2">Currently Saved</p>
-                <p className="text-2xl font-bold">${(travelGoal.current_saved || 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">₹{(travelGoal.current_saved || 0).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm opacity-80 mb-2">Remaining</p>
-                <p className="text-2xl font-bold">${remainingAmount.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₹{remainingAmount.toLocaleString()}</p>
               </div>
             </div>
             <div className="mt-6">
@@ -360,8 +500,8 @@ export default function TravelPage() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex gap-2">
-                              <span className="text-xs text-muted-foreground">${item.spent.toFixed(2)}</span>
-                              <span className="text-xs text-muted-foreground">/ ${item.budget.toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">₹{item.spent.toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">/ ₹{item.budget.toFixed(2)}</span>
                             </div>
                             <span
                               className={`text-xs font-semibold ${
@@ -394,6 +534,106 @@ export default function TravelPage() {
               )}
             </div>
           </div>
+
+          {/* AI Travel Suggestions */}
+          {travelGoal?.destination && Object.values(budgetCategories).some(cat => cat.budget > 0) && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+                  <MapPin className="w-6 h-6" />
+                  Travel Suggestions
+                </h2>
+              </div>
+
+              <div className="relative">
+                <div className="overflow-x-auto pb-4 scrollbar-hide">
+                  <div className="flex space-x-4">
+                    {isLoadingSuggestions ? (
+                      <div className="flex items-center justify-center w-full py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                      </div>
+                    ) : suggestions.length > 0 ? (
+                      suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="flex-none w-80 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                        >
+                          <div className="h-48 w-full relative">
+                            <img
+                              src={suggestion.imageUrl}
+                              alt={suggestion.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 left-2 bg-purple-600 px-2 py-1 rounded-lg text-xs font-semibold text-white capitalize">
+                              {suggestion.category}
+                            </div>
+                            <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-sm font-semibold">
+                              ₹{suggestion.price.toLocaleString()} {suggestion.priceLabel}
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg">{suggestion.name}</h3>
+                              <div className="flex items-center text-sm text-yellow-500">
+                                ★ {suggestion.rating}
+                              </div>
+                            </div>
+                            {suggestion.location && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                📍 {suggestion.location}
+                              </p>
+                            )}
+                            {suggestion.airline && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                ✈️ {suggestion.airline}
+                              </p>
+                            )}
+                            {suggestion.cuisine && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                🍽️ {suggestion.cuisine}
+                              </p>
+                            )}
+                            {suggestion.timing && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                🕒 {suggestion.timing}
+                              </p>
+                            )}
+                            <p className="text-sm text-gray-500 mb-3">{suggestion.description}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {suggestion.features.map((feature: string, i: number) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                                >
+                                  {feature}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="w-full text-center py-12 text-muted-foreground">
+                        <p>No suggestions available for your destination and budget.</p>
+                        <p className="text-sm mt-2">Try adjusting your budgets or changing the destination.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {suggestions.length > 0 && (
+                  <style jsx>{`
+                    .scrollbar-hide::-webkit-scrollbar {
+                      display: none;
+                    }
+                    .scrollbar-hide {
+                      -ms-overflow-style: none;
+                      scrollbar-width: none;
+                    }
+                  `}</style>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
 

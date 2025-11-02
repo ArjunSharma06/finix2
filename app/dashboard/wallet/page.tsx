@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-import { WalletIcon, Eye, EyeOff, Plus, Minus } from "lucide-react"
+import { WalletIcon, Eye, EyeOff, Plus, Minus, ChevronLeft, Menu } from "lucide-react"
 import { useState } from "react"
 import { useFinixData } from "@/lib/data-context"
+import { useRouter } from "next/navigation"
 
 export default function WalletPage() {
   const { balance, setBalance, transactions, addTransaction, removeTransaction } = useFinixData()
@@ -38,7 +39,7 @@ export default function WalletPage() {
       category: transactionForm.category,
       date: transactionForm.date,
       description: transactionForm.description || undefined,
-      currency: "USD",
+      currency: "INR",
     })
 
     setTransactionForm({
@@ -53,6 +54,26 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-6 h-6 text-slate-600" />
+        </button>
+        <button
+          onClick={() => {
+            const event = new CustomEvent('toggle-sidebar', { detail: {} });
+            window.dispatchEvent(event);
+          }}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors lg:hidden"
+          aria-label="Toggle menu"
+        >
+          <Menu className="w-6 h-6 text-slate-600" />
+        </button>
+      </div>
+      
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 flex items-center gap-3 mb-2">
           <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
@@ -75,15 +96,24 @@ export default function WalletPage() {
           </button>
         </div>
         <h2 className="text-5xl font-bold mb-8">
-          {showBalance ? `$${balance.toLocaleString()}` : "••••••"}
+          {showBalance ? `₹${balance.toLocaleString()}` : "••••••"}
         </h2>
-        <button
-          onClick={() => setShowBalanceForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg rounded-lg transition-all font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Set Balance
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowBalanceForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg rounded-lg transition-all font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Set Balance
+          </button>
+          <button
+            onClick={() => {/* Bank linking functionality will be added later */}}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Link a bank account
+          </button>
+        </div>
       </div>
 
       {/* Set Balance Form */}
@@ -93,7 +123,7 @@ export default function WalletPage() {
           <form onSubmit={handleSetBalance} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Current Balance ($)
+                Current Balance (₹)
               </label>
               <input
                 type="number"
@@ -145,7 +175,7 @@ export default function WalletPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Amount ($) *
+                  Amount (₹) *
                 </label>
                 <input
                   type="number"
@@ -218,7 +248,7 @@ export default function WalletPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white bg-slate-500">
-                    $
+                    ₹
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{tx.description || tx.category}</p>
@@ -229,7 +259,7 @@ export default function WalletPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="font-semibold text-foreground">
-                    -${tx.amount.toLocaleString()}
+                    -₹{tx.amount.toLocaleString()}
                   </p>
                   <button
                     onClick={() => removeTransaction(tx.id!)}
