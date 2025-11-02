@@ -68,7 +68,7 @@ export default function TransactionTable() {
 
   if (allTransactions.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
         <h2 className="text-lg font-semibold text-foreground">Recent Transactions</h2>
         <div className="text-center py-12 text-muted-foreground">
           <p>No transactions yet. Add some transactions on the Wallet or Expenses page.</p>
@@ -78,10 +78,10 @@ export default function TransactionTable() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Recent Transactions</h2>
-        <a href="/dashboard/wallet" className="text-xs font-medium text-primary hover:underline">
+        <a href="/dashboard/wallet" className="text-xs font-medium text-purple-600 hover:underline">
           View All
         </a>
       </div>
@@ -114,20 +114,20 @@ export default function TransactionTable() {
                 >
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-200">
-                        <Icon className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600/10 to-indigo-600/10 flex items-center justify-center group-hover:from-purple-600/20 group-hover:to-indigo-600/20 transition-all duration-200">
+                        <Icon className="w-5 h-5 text-purple-600" />
                       </div>
                       <span className="font-medium text-foreground">{tx.description}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="inline-block px-2.5 py-1 bg-muted text-muted-foreground text-xs font-medium rounded-md">
+                    <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md">
                       {tx.category}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-muted-foreground">{tx.date}</td>
                   <td className="py-4 px-4 text-right">
-                    <span className="font-semibold text-foreground">-${tx.amount.toFixed(2)}</span>
+                    <span className="font-semibold text-foreground">-₹{tx.amount.toFixed(2)}</span>
                   </td>
                 </tr>
               )
@@ -157,8 +157,8 @@ export default function TransactionTable() {
                 onClick={() => setCurrentPage(page)}
                 className={`w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 ${
                   page === currentPage
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground hover:bg-muted/80"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 {page}

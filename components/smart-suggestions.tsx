@@ -78,9 +78,9 @@ export default function SmartSuggestions() {
   // Don't render until mounted to avoid hydration issues
   if (!mounted) {
     return (
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
         <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-5 h-5 text-primary" />
+          <Zap className="w-5 h-5 text-purple-600" />
           <h2 className="font-semibold text-foreground">Smart Suggestions</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-4">AI-powered insights</p>
@@ -91,13 +91,13 @@ export default function SmartSuggestions() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
         <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-5 h-5 text-primary" />
+          <Zap className="w-5 h-5 text-purple-600" />
           <h2 className="font-semibold text-foreground">Smart Suggestions</h2>
         </div>
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 text-primary animate-spin" />
+          <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
           <span className="ml-2 text-sm text-muted-foreground">Loading suggestions...</span>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function SmartSuggestions() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border p-6 space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center gap-2 mb-2">
         <Zap className="w-5 h-5 text-primary" />
         <h2 className="font-semibold text-foreground">Smart Suggestions</h2>
@@ -133,21 +133,21 @@ export default function SmartSuggestions() {
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <SuggestionIcon className="w-4 h-4 text-primary" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600/10 to-indigo-600/10 flex items-center justify-center">
+                    <SuggestionIcon className="w-4 h-4 text-purple-600" />
                   </div>
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                  <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
                     {suggestion.category || "General"}
                   </span>
                 </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-purple-600 transition-colors duration-200" />
               </div>
               <h3 className="font-semibold text-sm text-foreground mb-1">{suggestion.title}</h3>
               <p className="text-xs text-muted-foreground mb-3">{suggestion.description}</p>
               {Number(suggestion.potential_savings) > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-emerald-600">
-                    Save ${Number(suggestion.potential_savings).toFixed(2)}/month
+                    Save ₹{Number(suggestion.potential_savings).toFixed(2)}/month
                   </span>
                   <span className="text-xs text-muted-foreground">{suggestion.impact}</span>
                 </div>

@@ -119,12 +119,12 @@ export default function TravelPage() {
     : 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-foreground flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+          <h1 className="text-4xl font-bold text-slate-900 flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
               <Plane className="w-6 h-6 text-white" />
             </div>
             Travel Goal
@@ -134,7 +134,7 @@ export default function TravelPage() {
         {travelGoal && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg text-white rounded-lg transition-all font-medium"
           >
             Edit Goal
           </button>
@@ -217,7 +217,7 @@ export default function TravelPage() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-all font-medium"
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
               >
                 <Save className="w-4 h-4" />
                 Save Goal
@@ -301,7 +301,7 @@ export default function TravelPage() {
               </h2>
               <button
                 onClick={() => setShowBudgetForm(!showBudgetForm)}
-                className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg text-white rounded-lg transition-all font-medium"
               >
                 <Edit2 className="w-4 h-4" />
                 {showBudgetForm ? "Cancel" : "Edit Budgets"}
@@ -340,7 +340,7 @@ export default function TravelPage() {
                       }
                       setShowBudgetForm(false)
                     }}
-                    className="w-full px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-all font-medium"
+                    className="w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
                   >
                     Save Budgets
                   </button>
@@ -406,7 +406,7 @@ export default function TravelPage() {
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-all font-medium"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
           >
             Create Travel Goal
           </button>

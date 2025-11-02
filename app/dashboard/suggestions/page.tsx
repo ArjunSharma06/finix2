@@ -62,12 +62,12 @@ export default function SuggestionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-foreground flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
               <Lightbulb className="w-6 h-6 text-white" />
             </div>
             Smart Suggestions
@@ -82,7 +82,7 @@ export default function SuggestionsPage() {
         <button
           onClick={fetchSuggestions}
           disabled={loading || !travelGoal || transactions.length === 0}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-all font-medium"
         >
           {loading ? (
             <>

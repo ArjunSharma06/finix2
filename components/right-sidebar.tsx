@@ -65,27 +65,27 @@ export default function RightSidebar() {
   return (
     <div className="w-80 overflow-auto p-6 space-y-6">
       {/* Budget Status Card */}
-      <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/20 p-6 space-y-4 hover:shadow-md transition-all duration-300">
+      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-purple-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Remaining Budget</p>
-            <p className="text-3xl font-bold text-foreground">${budgetRemaining.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-foreground">₹{budgetRemaining.toLocaleString()}</p>
           </div>
-          <Target className="w-10 h-10 text-primary/40" />
+          <Target className="w-10 h-10 text-purple-400" />
         </div>
         <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+            className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500"
             style={{ width: `${Math.min((totalSpent / monthlyBudget) * 100, 100)}%` }}
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          ${totalSpent.toLocaleString()} of ${monthlyBudget.toLocaleString()} spent
+          ₹{totalSpent.toLocaleString()} of ₹{monthlyBudget.toLocaleString()} spent
         </p>
       </div>
 
       {/* Category Breakdown */}
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4 hover:shadow-md transition-all duration-300">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
         <h2 className="text-lg font-semibold text-foreground">Spending by Category</h2>
         {categoryData.length > 0 ? (
           <>
@@ -127,7 +127,7 @@ export default function RightSidebar() {
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-semibold text-foreground">{category.value}%</span>
-                    <p className="text-xs text-muted-foreground">${category.amount.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">₹{category.amount.toFixed(0)}</p>
                   </div>
                 </div>
               ))}
@@ -145,14 +145,17 @@ export default function RightSidebar() {
       <SmartSuggestions />
 
       {/* Monthly Goal Card */}
-      <div className="bg-white rounded-xl border border-border p-5 space-y-3 hover:shadow-md transition-all duration-300">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 hover:shadow-lg transition-all duration-300">
         <div className="flex items-center gap-2">
           <TrendingDown className="w-5 h-5 text-green-600" />
           <h3 className="font-semibold text-foreground">Monthly Goal</h3>
         </div>
         <p className="text-sm text-muted-foreground">You're tracking well! Keep up the good spending habits.</p>
         <div className="flex gap-2 pt-2">
-          <button className="flex-1 text-xs py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity">
+          <button 
+            onClick={() => {}}
+            className="flex-1 text-xs py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all"
+          >
             Adjust Goal
           </button>
         </div>

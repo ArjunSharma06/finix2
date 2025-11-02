@@ -37,13 +37,13 @@ export default function FairSharePage() {
   const totalOwnedToYou = pendingSettlements.filter((s) => s.type === "owed").reduce((sum, s) => sum + s.amount, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-foreground flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
-          </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+              <Users className="w-6 h-6 text-white" />
+            </div>
           FairShare
         </h1>
         <p className="text-muted-foreground">Split expenses fairly with friends and groups</p>
@@ -91,8 +91,8 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("groups")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "groups"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-              : "bg-white border border-border text-foreground hover:bg-muted"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+              : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
           }`}
         >
           Active Groups
@@ -101,7 +101,7 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("settlements")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "settlements"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
               : "bg-white border border-border text-foreground hover:bg-muted"
           }`}
         >
@@ -111,7 +111,7 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("history")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "history"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
               : "bg-white border border-border text-foreground hover:bg-muted"
           }`}
         >
@@ -134,7 +134,7 @@ export default function FairSharePage() {
                     {Array.from({ length: group.members }).map((_, i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                        className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
                       >
                         {String.fromCharCode(65 + i)}
                       </div>

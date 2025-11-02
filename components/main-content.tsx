@@ -12,6 +12,7 @@ export default function MainContent() {
   const [formBalance, setFormBalance] = useState<string>("")
   const [formBudget, setFormBudget] = useState<string>("")
   const [mounted, setMounted] = useState(false)
+  const [timeRange, setTimeRange] = useState<"3M" | "1Y">("3M")
 
   // Fix hydration issue
   useEffect(() => {
@@ -103,12 +104,12 @@ export default function MainContent() {
       {/* Welcome Header with Animation */}
       <div className="space-y-1 animate-fade-in flex items-start justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, Sarah!</h1>
-          <p className="text-muted-foreground">Here's your financial overview for August</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, User!</h1>
+          <p className="text-muted-foreground">Here's your financial overview</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
         >
           <Settings className="w-4 h-4" />
           Set Budget
@@ -126,7 +127,7 @@ export default function MainContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Current Balance ($)
+                  Current Balance (₹)
                 </label>
                 <input
                   type="number"
@@ -139,7 +140,7 @@ export default function MainContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Monthly Budget ($)
+                  Monthly Budget (₹)
                 </label>
                 <input
                   type="number"
@@ -154,7 +155,7 @@ export default function MainContent() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all font-medium"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
               >
                 Save
               </button>
@@ -165,7 +166,7 @@ export default function MainContent() {
                   setFormBalance("")
                   setFormBudget("")
                 }}
-                className="px-6 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all font-medium"
+                className="px-6 py-2 bg-white border-2 border-slate-200 text-slate-900 rounded-lg hover:border-slate-300 hover:shadow-md transition-all font-medium"
               >
                 Cancel
               </button>
@@ -174,7 +175,7 @@ export default function MainContent() {
           {balance > 0 && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Current Balance: <span className="font-semibold text-foreground">${balance.toLocaleString()}</span>
+                Current Balance: <span className="font-semibold text-foreground">₹{balance.toLocaleString()}</span>
               </p>
             </div>
           )}
@@ -184,11 +185,11 @@ export default function MainContent() {
       {/* Quick Stats Row */}
       <div className="grid grid-cols-3 gap-4">
         {/* Current Month Spending */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">This Month</p>
           {mounted ? (
             <>
-              <p className="text-2xl font-bold text-foreground">${currentMonthSpending.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">₹{currentMonthSpending.toLocaleString()}</p>
               <p className={`text-xs mt-2 ${parseFloat(percentageChange) > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
                 {parseFloat(percentageChange) > 0 ? "+" : ""}
                 {percentageChange}% from last month
@@ -196,43 +197,43 @@ export default function MainContent() {
             </>
           ) : (
             <>
-              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
               <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
             </>
           )}
         </div>
 
         {/* Budget */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
           {mounted ? (
             <>
-              <p className="text-2xl font-bold text-foreground">${monthlyBudget.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">₹{monthlyBudget.toLocaleString()}</p>
               <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
-                ${Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
+                ₹{Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
               </p>
             </>
           ) : (
             <>
-              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
               <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
             </>
           )}
         </div>
 
         {/* Total Spending */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Spending</p>
           {mounted ? (
             <>
               <p className="text-2xl font-bold text-foreground">
-                ${totalSpending.toLocaleString()}
+                ₹{totalSpending.toLocaleString()}
               </p>
               <p className="text-xs mt-2 text-muted-foreground font-medium">{transactions.length} transactions</p>
             </>
           ) : (
             <>
-              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
               <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
             </>
           )}
@@ -240,14 +241,28 @@ export default function MainContent() {
       </div>
 
       {/* Spending Overview Chart */}
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4 hover:shadow-lg transition-all duration-300">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Spending Trends</h2>
           <div className="flex gap-2">
-            <button className="text-xs px-3 py-1 bg-primary text-primary-foreground rounded-md font-medium transition-all hover:opacity-90">
+            <button 
+              onClick={() => setTimeRange("3M")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "3M"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
               3M
             </button>
-            <button className="text-xs px-3 py-1 bg-muted text-foreground rounded-md font-medium hover:bg-muted/80 transition-all">
+            <button 
+              onClick={() => setTimeRange("1Y")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "1Y"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
               1Y
             </button>
           </div>
@@ -275,7 +290,7 @@ export default function MainContent() {
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
-              formatter={(value) => `$${value.toLocaleString()}`}
+              formatter={(value) => `₹${value.toLocaleString()}`}
             />
             <Area
               type="monotone"

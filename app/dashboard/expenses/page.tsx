@@ -86,13 +86,13 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-foreground flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-lg flex items-center justify-center">
+            <h1 className="text-4xl font-bold text-slate-900 flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                 <TrendingDown className="w-6 h-6 text-white" />
               </div>
               Expenses Analysis
@@ -100,11 +100,11 @@ export default function ExpensesPage() {
             <p className="text-muted-foreground mt-2">Track and analyze your spending patterns</p>
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-border hover:bg-muted transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
               <Filter className="w-4 h-4" />
               Filter
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-border hover:bg-muted transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
               <Download className="w-4 h-4" />
               Export
             </button>
@@ -119,8 +119,8 @@ export default function ExpensesPage() {
               onClick={() => setTimeRange(range)}
               className={`px-4 py-2 rounded-lg transition-all duration-200 ${
                 timeRange === range
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
-                  : "bg-white text-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white text-slate-900 border border-slate-200 hover:shadow-md"
               }`}
             >
               {range === "1m" ? "1M" : range === "3m" ? "3M" : range === "6m" ? "6M" : range === "1y" ? "1Y" : "All"}
@@ -128,7 +128,7 @@ export default function ExpensesPage() {
           ))}
           <button
             onClick={() => setShowTransactionForm(!showTransactionForm)}
-            className="ml-auto flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors font-medium"
+            className="ml-auto flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg text-white rounded-lg transition-all font-medium"
           >
             {showTransactionForm ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {showTransactionForm ? "Cancel" : "Add Expense"}
@@ -196,7 +196,7 @@ export default function ExpensesPage() {
             </div>
             <button
               type="submit"
-              className="w-full px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all font-medium"
+              className="w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
             >
               Add Expense
             </button>

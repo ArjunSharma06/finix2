@@ -51,11 +51,11 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+        <h1 className="text-4xl font-bold text-slate-900 flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
             <WalletIcon className="w-6 h-6 text-white" />
           </div>
           Wallet
@@ -79,7 +79,7 @@ export default function WalletPage() {
         </h2>
         <button
           onClick={() => setShowBalanceForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg rounded-lg transition-all font-medium"
         >
           <Plus className="w-4 h-4" />
           Set Balance
@@ -108,7 +108,7 @@ export default function WalletPage() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all font-medium"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
               >
                 Save Balance
               </button>
@@ -118,7 +118,7 @@ export default function WalletPage() {
                   setShowBalanceForm(false)
                   setBalanceInput("")
                 }}
-                className="px-6 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all font-medium"
+                className="px-6 py-2 bg-white border-2 border-slate-200 text-slate-900 rounded-lg hover:border-slate-300 hover:shadow-md transition-all font-medium"
               >
                 Cancel
               </button>
@@ -133,7 +133,7 @@ export default function WalletPage() {
           <h3 className="text-xl font-semibold text-foreground">Transactions</h3>
           <button
             onClick={() => setShowTransactionForm(!showTransactionForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg text-white rounded-lg transition-all font-medium"
           >
             {showTransactionForm ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {showTransactionForm ? "Cancel" : "Add Transaction"}
@@ -197,7 +197,7 @@ export default function WalletPage() {
             </div>
             <button
               type="submit"
-              className="w-full px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all font-medium"
+              className="w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
             >
               Add Transaction
             </button>
