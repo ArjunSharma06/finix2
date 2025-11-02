@@ -1,55 +1,49 @@
 import Link from "next/link"
-import { ArrowRight, TrendingUp, Shield, BarChart3 } from "lucide-react"
+import { ArrowRight, TrendingUp, Plane, BarChart3, Mail, Linkedin, Facebook, Instagram, Zap, Target, Sparkles } from "lucide-react"
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-sm">Fx</span>
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+              <Zap className="w-7 h-7 text-white" />
             </div>
-            <span className="font-bold text-xl text-foreground">FINIX</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </a>
-            <Link
-              href="/dashboard"
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
-            >
-              Dashboard
-            </Link>
+            <span className="font-bold text-3xl text-slate-900">FINIX</span>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-6 py-20 md:py-32">
+      <section className="max-w-7xl mx-auto px-6 py-20 md:py-32">
         <div className="text-center space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground text-balance leading-tight">
-              FINIX.
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+              <Sparkles className="w-4 h-4" />
+              AI-Powered Financial Platform
+            </div>
+            <h1 className="text-6xl md:text-7xl font-bold text-slate-900 text-balance leading-tight">
+              Take Control of Your
+              <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"> Finances</span>
             </h1>
-            <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto">
-              Track spending, split bills, and get AI-powered insights. Take control of your finances with FINIX.
+            <p className="text-xl md:text-2xl text-slate-600 text-balance max-w-3xl mx-auto leading-relaxed">
+              Track spending, split bills effortlessly, and get AI-powered insights. Your all-in-one financial companion.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-xl transition-all duration-200 text-lg"
             >
               Get Started
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a
               href="#features"
-              className="inline-flex items-center justify-center gap-2 bg-muted text-foreground px-8 py-3 rounded-lg font-semibold hover:bg-muted/80 transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-slate-900 px-8 py-4 rounded-lg font-semibold hover:border-purple-300 hover:shadow-lg transition-all duration-200 text-lg"
             >
               Learn More
             </a>
@@ -58,70 +52,148 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="max-w-6xl mx-auto px-6 py-20">
+      <section id="features" className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-foreground mb-4">FINIX.
-</h2>
-          <p className="text-lg text-muted-foreground">Everything you need for complete financial control</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Everything You Need</h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">Complete financial control in one powerful platform</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Feature 1 */}
-          <div className="bg-white rounded-xl border border-border p-8 space-y-4 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-primary" />
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+              <TrendingUp className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground">Smart Analytics</h3>
-            <p className="text-muted-foreground">
-              Real-time insights into your spending patterns with AI-powered recommendations.
+            <h3 className="text-2xl font-bold text-slate-900">Smart Analytics</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Real-time insights into your spending patterns with AI-powered recommendations tailored to your goals.
             </p>
           </div>
 
           {/* Feature 2 */}
-          <div className="bg-white rounded-xl border border-border p-8 space-y-4 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-accent" />
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Shield className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground">Bank-Level Security</h3>
-            <p className="text-muted-foreground">
-              Your financial data is protected with enterprise-grade encryption and security.
+            <h3 className="text-2xl font-bold text-slate-900">Bank-Level Security</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Your financial data is protected with enterprise-grade encryption and security protocols you can trust.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div className="bg-white rounded-xl border border-border p-8 space-y-4 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-primary" />
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+              <BarChart3 className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground">Bill Splitting</h3>
-            <p className="text-muted-foreground">
-              Effortlessly split expenses with friends and settle debts automatically.
+            <h3 className="text-2xl font-bold text-slate-900">Bill Splitting</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Effortlessly split expenses with friends and settle debts automatically. FairShare makes it simple.
             </p>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-6xl mx-auto px-6 py-20">
-        <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-12 text-center space-y-6">
-          <h2 className="text-4xl font-bold text-primary-foreground">Ready to Manage Your Finances?</h2>
-          <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto">
-            Join thousands using FINIX to take control of their money today.
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-3xl p-12 md:p-16 text-center space-y-8 shadow-2xl">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
+            <Target className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-white">Ready to Manage Your Finances?</h2>
+          <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+            Join thousands using FINIX to take control of their money today. Start your journey to financial freedom.
           </p>
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 bg-primary-foreground text-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-10 py-4 rounded-lg font-bold hover:shadow-2xl transition-all duration-200 text-lg hover:scale-105"
           >
-            Start Dashboard
-            <ArrowRight className="w-5 h-5" />
+            LESSGOOOO!
+            <ArrowRight className="w-6 h-6" />
           </Link>
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section className="bg-white border-t border-slate-200 py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Get In Touch</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Have questions? We'd love to hear from you. Connect with us on social media or send us an email.
+            </p>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+            {/* Email */}
+            <a
+              href="mailto:contact@finix.com"
+              className="flex items-center gap-3 group"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-slate-500 font-medium">Email</p>
+                <p className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
+                  contact@finix.com
+                </p>
+              </div>
+            </a>
+
+            {/* LinkedIn */}
+            <a
+              href="https://linkedin.com/company/finix"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 group"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                <Linkedin className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-slate-500 font-medium">LinkedIn</p>
+                <p className="text-lg font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
+                  /company/finix
+                </p>
+              </div>
+            </a>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-4">
+              <a
+                href="https://facebook.com/finix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-6 h-6 text-white" />
+              </a>
+              <a
+                href="https://instagram.com/finix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-6 h-6 text-white" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-border mt-20 py-12">
-        <div className="max-w-6xl mx-auto px-6 text-center text-muted-foreground text-sm">
-          <p>© 2025 FINIX. All rights reserved.</p>
+      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-xl text-white">FINIX</span>
+          </div>
+          <p className="text-sm">© 2025 FINIX. All rights reserved.</p>
         </div>
       </footer>
     </div>
