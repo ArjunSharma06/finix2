@@ -211,7 +211,7 @@ export default function SuggestionsPage() {
                       <p className="text-sm text-muted-foreground mt-1">{suggestion.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600">Save ${suggestion.savings.toFixed(2)}</p>
+                      <p className="text-lg font-bold text-emerald-600">Save ${Number(suggestion.potential_savings).toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground mt-1">{suggestion.category}</p>
                     </div>
                   </div>

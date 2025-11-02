@@ -179,31 +179,35 @@ class AIEngine:
             Formatted prompt string for the LLM
         """
         category_breakdown_str = "\n".join([
-            f"  - {cat}: ${amount:.2f}"
+            f"  - {cat}: ${float(amount):.2f}"
             for cat, amount in sorted(analysis["category_breakdown"].items(), 
                                      key=lambda x: x[1], reverse=True)[:10]
         ])
+
+        # Format timeline metrics safely
+        current_pace_str = f"{savings_metrics['months_to_goal_current']:.1f}" if savings_metrics["months_to_goal_current"] is not None else "N/A"
+        optimized_pace_str = f"{savings_metrics['months_to_goal_optimized']:.1f}" if savings_metrics["months_to_goal_optimized"] is not None else "N/A"
 
         prompt = f"""You are a financial advisor helping a user save for their travel goal.
 
 USER'S TRAVEL GOAL:
 - Goal Name: {travel_goal.name}
 - Destination: {travel_goal.destination or "Not specified"}
-- Target Amount: ${travel_goal.target_amount:,.2f}
-- Currently Saved: ${travel_goal.current_saved:,.2f}
-- Remaining to Save: ${savings_metrics["remaining_amount"]:,.2f}
+- Target Amount: ${float(travel_goal.target_amount):,.2f}
+- Currently Saved: ${float(travel_goal.current_saved):,.2f}
+- Remaining to Save: ${float(savings_metrics["remaining_amount"]):,.2f}
 
 CURRENT SPENDING PATTERNS:
-- Average Monthly Spending: ${analysis["average_monthly_spending"]:,.2f}
-- Non-Essential Spending (last period): ${analysis["non_essential_spending"]:,.2f}
+- Average Monthly Spending: ${float(analysis["average_monthly_spending"]):,.2f}
+- Non-Essential Spending (last period): ${float(analysis["non_essential_spending"]):,.2f}
 - Total Transactions Analyzed: {analysis["transaction_count"]}
 
 TOP SPENDING CATEGORIES:
-{category_breakdown_str}
+{category_breakdown_str if category_breakdown_str else "  - No category data available"}
 
 TIMELINE ANALYSIS:
-- Current pace: {savings_metrics["months_to_goal_current"]:.1f} months to goal (if saving 20% of income)
-- Optimized pace: {savings_metrics["months_to_goal_optimized"]:.1f} months to goal (with spending cuts)
+- Current pace: {current_pace_str} months to goal (if saving 20% of income)
+- Optimized pace: {optimized_pace_str} months to goal (with spending cuts)
 
 TASK:
 Generate 3-5 specific, actionable savings suggestions that directly link current spending patterns to the travel goal. Each suggestion should:
@@ -348,7 +352,25 @@ Be specific with numbers and make it personal. Reference the destination if prov
                 self.amount = Decimal(str(data['amount']))
                 self.category = data['category']
                 self.currency = data.get('currency', 'USD')
-                self.date = data['date'] if isinstance(data['date'], date) else date.fromisoformat(str(data['date']))
+                # Handle date parsing - could be date object, string, or None
+                date_val = data.get('date')
+                if date_val is None:
+                    self.date = date.today()  # Default to today if missing
+                elif isinstance(date_val, date):
+                    self.date = date_val
+                elif isinstance(date_val, str):
+                    # Try ISO format first, then other formats
+                    try:
+                        self.date = date.fromisoformat(date_val)
+                    except (ValueError, AttributeError):
+                        # Fallback: try parsing common date formats
+                        from datetime import datetime
+                        try:
+                            self.date = datetime.strptime(date_val, '%Y-%m-%d').date()
+                        except ValueError:
+                            self.date = date.today()  # Ultimate fallback
+                else:
+                    self.date = date.today()
                 self.description = data.get('description')
         
         # Create mock TravelGoal object

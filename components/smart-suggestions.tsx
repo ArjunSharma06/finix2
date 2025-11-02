@@ -24,6 +24,7 @@ export default function SmartSuggestions() {
     const fetchSuggestions = async () => {
       if (!travelGoal || transactions.length === 0) {
         setSuggestions([])
+        setError(null)
         return
       }
 
@@ -31,13 +32,23 @@ export default function SmartSuggestions() {
       setError(null)
 
       try {
+        console.log("Fetching suggestions with:", { 
+          transactionCount: transactions.length, 
+          travelGoal: travelGoal.name,
+          targetAmount: travelGoal.target_amount 
+        })
         const response = await calculateSuggestions(transactions, travelGoal, 1)
-        setSuggestions(response.suggestions.slice(0, 3)) // Show top 3
+        console.log("Suggestions response:", response)
+        if (response && response.suggestions) {
+          setSuggestions(response.suggestions.slice(0, 3)) // Show top 3
+        } else {
+          setError("No suggestions returned from API")
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load suggestions"
         setError(errorMessage)
         console.error("Error fetching suggestions:", err)
-        // Don't clear suggestions on error - keep showing helpful message
+        setSuggestions([]) // Clear suggestions on error
       } finally {
         setLoading(false)
       }
@@ -45,7 +56,7 @@ export default function SmartSuggestions() {
 
     fetchSuggestions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted, transactions.length, travelGoal?.name, travelGoal?.target_amount])
+  }, [mounted, transactions.length, travelGoal?.name, travelGoal?.target_amount, travelGoal?.current_saved])
 
   const displaySuggestions = suggestions.length > 0 ? suggestions : [
     {
@@ -107,7 +118,7 @@ export default function SmartSuggestions() {
             if (suggestion.category?.toLowerCase().includes("food") || suggestion.category?.toLowerCase().includes("dining")) {
               return AlertCircle
             }
-            if (suggestion.potential_savings > 100) {
+            if (Number(suggestion.potential_savings) > 100) {
               return Zap
             }
             return Lightbulb
@@ -133,10 +144,10 @@ export default function SmartSuggestions() {
               </div>
               <h3 className="font-semibold text-sm text-foreground mb-1">{suggestion.title}</h3>
               <p className="text-xs text-muted-foreground mb-3">{suggestion.description}</p>
-              {suggestion.potential_savings > 0 && (
+              {Number(suggestion.potential_savings) > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-emerald-600">
-                    Save ${suggestion.potential_savings.toFixed(2)}/month
+                    Save ${Number(suggestion.potential_savings).toFixed(2)}/month
                   </span>
                   <span className="text-xs text-muted-foreground">{suggestion.impact}</span>
                 </div>
@@ -147,8 +158,17 @@ export default function SmartSuggestions() {
       </div>
       
       {error && (
-        <div className="text-xs text-red-500 mt-2">
-          {error}. <Link href="/dashboard/suggestions" className="underline">View full suggestions</Link>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-xs font-medium text-red-900 mb-1">Error loading suggestions</p>
+              <p className="text-xs text-red-700">{error}</p>
+              <Link href="/dashboard/suggestions" className="text-xs text-red-600 underline mt-1 inline-block">
+                Try on full suggestions page →
+              </Link>
+            </div>
+          </div>
         </div>
       )}
       

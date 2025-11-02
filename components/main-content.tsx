@@ -186,29 +186,56 @@ export default function MainContent() {
         {/* Current Month Spending */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">This Month</p>
-          <p className="text-2xl font-bold text-foreground">${currentMonthSpending.toLocaleString()}</p>
-          <p className={`text-xs mt-2 ${parseFloat(percentageChange) > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
-            {parseFloat(percentageChange) > 0 ? "+" : ""}
-            {percentageChange}% from last month
-          </p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">${currentMonthSpending.toLocaleString()}</p>
+              <p className={`text-xs mt-2 ${parseFloat(percentageChange) > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
+                {parseFloat(percentageChange) > 0 ? "+" : ""}
+                {percentageChange}% from last month
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
 
         {/* Budget */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
-          <p className="text-2xl font-bold text-foreground">${monthlyBudget.toLocaleString()}</p>
-          <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
-            ${Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
-          </p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">${monthlyBudget.toLocaleString()}</p>
+              <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
+                ${Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
 
         {/* Total Spending */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Spending</p>
-          <p className="text-2xl font-bold text-foreground">
-            ${totalSpending.toLocaleString()}
-          </p>
-          <p className="text-xs mt-2 text-muted-foreground font-medium">{transactions.length} transactions</p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">
+                ${totalSpending.toLocaleString()}
+              </p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">{transactions.length} transactions</p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">$0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
       </div>
 
