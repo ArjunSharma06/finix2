@@ -13,3 +13,7 @@ GROQ_API_KEY=your_groq_api_key_here
 HOST=0.0.0.0
 PORT=8000
 
+# Optional: Skip Database Initialization (for testing without DB)
+# Set to "true" to skip database connection and table creation
+SKIP_DB_INIT=false
+

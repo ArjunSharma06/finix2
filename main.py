@@ -8,6 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 from backend.database import get_db, init_db, engine
 from backend.models import Base, User, Transaction, TravelGoal
@@ -30,9 +35,11 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # Next.js default port
-        "http://localhost:3001",
+        "http://localhost:3000",  # Next.js default port (local dev)
+        "http://localhost:3001",  # Alternative Next.js port
         "http://localhost:5173",  # Vite default port
+        "https://finix9.vercel.app",  # Production frontend (Vercel)
+        "https://*.vercel.app",  # All Vercel preview deployments
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -58,14 +65,27 @@ def get_ai_engine() -> Optional[AIEngine]:
 @app.on_event("startup")
 async def startup_event():
     """Initialize database tables on application startup."""
-    init_db()
+    db_initialized = init_db()
+    if not db_initialized:
+        print("[INFO] Running in database-less mode. Some endpoints may not work.")
 
 
 # Health Check Endpoint
 @app.get("/health")
 async def health_check():
     """Health check endpoint to verify API is running."""
-    return {"status": "healthy", "service": "FINIX API"}
+    from backend.database import check_db_connection, SKIP_DB_INIT
+    
+    db_status = "connected" if check_db_connection() else "disconnected"
+    if SKIP_DB_INIT:
+        db_status = "skipped"
+    
+    return {
+        "status": "healthy",
+        "service": "FINIX API",
+        "database": db_status,
+        "version": "1.0.0"
+    }
 
 
 # ==================== USER ENDPOINTS ====================
