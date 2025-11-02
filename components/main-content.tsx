@@ -1,36 +1,94 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import TransactionTable from "./transaction-table"
 import { Settings, DollarSign } from "lucide-react"
-
-const spendingData = [
-  { month: "Jan", amount: 28500, budget: 35000 },
-  { month: "Feb", amount: 31200, budget: 35000 },
-  { month: "Mar", amount: 26500, budget: 35000 },
-  { month: "Apr", amount: 38900, budget: 35000 },
-  { month: "May", amount: 34200, budget: 35000 },
-  { month: "Jun", amount: 37400, budget: 35000 },
-  { month: "Jul", amount: 41200, budget: 35000 },
-  { month: "Aug", amount: 35600, budget: 35000 },
-]
+import { useFinixData } from "@/lib/data-context"
 
 export default function MainContent() {
+  const { balance, setBalance, transactions, monthlyBudget, setMonthlyBudget } = useFinixData()
   const [showForm, setShowForm] = useState(false)
-  const [currentBalance, setCurrentBalance] = useState<number>(0)
-  const [monthlyBudget, setMonthlyBudget] = useState<number>(3500)
   const [formBalance, setFormBalance] = useState<string>("")
   const [formBudget, setFormBudget] = useState<string>("")
+  const [mounted, setMounted] = useState(false)
 
-  const currentMonth = spendingData[spendingData.length - 1]
-  const previousMonth = spendingData[spendingData.length - 2]
-  const percentageChange = (((currentMonth.amount - previousMonth.amount) / previousMonth.amount) * 100).toFixed(1)
+  // Fix hydration issue
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Calculate spending from transactions
+  const totalSpending = transactions.reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Calculate current month spending (transactions from current month)
+  const currentMonthSpending = useMemo(() => {
+    if (!mounted) return 0 // Return 0 during SSR to avoid hydration mismatch
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    
+    return transactions
+      .filter((tx) => {
+        const txDate = new Date(tx.date)
+        return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear
+      })
+      .reduce((sum, tx) => sum + tx.amount, 0)
+  }, [transactions, mounted])
+
+  // Calculate previous month spending
+  const previousMonthSpending = useMemo(() => {
+    if (!mounted) return 0 // Return 0 during SSR to avoid hydration mismatch
+    const now = new Date()
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    
+    return transactions
+      .filter((tx) => {
+        const txDate = new Date(tx.date)
+        return txDate.getMonth() === prevMonth && txDate.getFullYear() === prevYear
+      })
+      .reduce((sum, tx) => sum + tx.amount, 0)
+  }, [transactions, mounted])
+
+  // Calculate percentage change
+  const percentageChange = previousMonthSpending > 0
+    ? (((currentMonthSpending - previousMonthSpending) / previousMonthSpending) * 100).toFixed(1)
+    : "0.0"
+
+  // Generate spending data for graph (last 6 months)
+  const spendingData = useMemo(() => {
+    const months: { month: string; amount: number; budget: number }[] = []
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const now = new Date()
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = monthNames[date.getMonth()]
+      const monthNum = date.getMonth()
+      const year = date.getFullYear()
+      
+      const monthSpending = transactions
+        .filter((tx) => {
+          const txDate = new Date(tx.date)
+          return txDate.getMonth() === monthNum && txDate.getFullYear() === year
+        })
+        .reduce((sum, tx) => sum + tx.amount, 0)
+      
+      months.push({
+        month,
+        amount: monthSpending,
+        budget: monthlyBudget,
+      })
+    }
+    
+    return months
+  }, [transactions, monthlyBudget])
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault()
     if (formBalance) {
-      setCurrentBalance(parseFloat(formBalance) || 0)
+      setBalance(parseFloat(formBalance) || 0)
     }
     if (formBudget) {
       setMonthlyBudget(parseFloat(formBudget) || 3500)
@@ -75,7 +133,7 @@ export default function MainContent() {
                   step="0.01"
                   value={formBalance}
                   onChange={(e) => setFormBalance(e.target.value)}
-                  placeholder={currentBalance.toString()}
+                  placeholder={balance.toString()}
                   className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                 />
               </div>
@@ -113,10 +171,10 @@ export default function MainContent() {
               </button>
             </div>
           </form>
-          {currentBalance > 0 && (
+          {balance > 0 && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Current Balance: <span className="font-semibold text-foreground">${currentBalance.toLocaleString()}</span>
+                Current Balance: <span className="font-semibold text-foreground">${balance.toLocaleString()}</span>
               </p>
             </div>
           )}
@@ -128,9 +186,9 @@ export default function MainContent() {
         {/* Current Month Spending */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">This Month</p>
-          <p className="text-2xl font-bold text-foreground">₹{currentMonth.amount.toLocaleString("en-IN")}</p>
-          <p className={`text-xs mt-2 ${percentageChange > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
-            {percentageChange > 0 ? "+" : ""}
+          <p className="text-2xl font-bold text-foreground">${currentMonthSpending.toLocaleString()}</p>
+          <p className={`text-xs mt-2 ${parseFloat(percentageChange) > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
+            {parseFloat(percentageChange) > 0 ? "+" : ""}
             {percentageChange}% from last month
           </p>
         </div>
@@ -139,18 +197,18 @@ export default function MainContent() {
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
           <p className="text-2xl font-bold text-foreground">${monthlyBudget.toLocaleString()}</p>
-          <p className="text-xs mt-2 text-green-600 font-medium">
-            ${(monthlyBudget - currentMonth.amount).toLocaleString()} remaining
+          <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
+            ${Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
           </p>
         </div>
 
-        {/* Year Total */}
+        {/* Total Spending */}
         <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Year to Date</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Spending</p>
           <p className="text-2xl font-bold text-foreground">
-            ₹{spendingData.reduce((sum, d) => sum + d.amount, 0).toLocaleString("en-IN")}
+            ${totalSpending.toLocaleString()}
           </p>
-          <p className="text-xs mt-2 text-muted-foreground font-medium">8 months tracked</p>
+          <p className="text-xs mt-2 text-muted-foreground font-medium">{transactions.length} transactions</p>
         </div>
       </div>
 
@@ -190,7 +248,7 @@ export default function MainContent() {
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
-              formatter={(value) => `₹${value.toLocaleString("en-IN")}`}
+              formatter={(value) => `$${value.toLocaleString()}`}
             />
             <Area
               type="monotone"

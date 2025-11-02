@@ -499,9 +499,12 @@ async def calculate_suggestions_stateless(request: SuggestionsCalculateRequest):
         AI-generated savings suggestions with analysis
     """
     try:
-        # Create engine in mock mode for Round 1 Prototype (no API key required)
-        from ai_engine import AIEngine
-        engine = AIEngine(mock_mode=True)
+        # Get or create AI engine (will use Groq API if key is set, otherwise mock mode)
+        engine = get_ai_engine()
+        if engine is None:
+            # Fallback to mock mode if API key not available
+            from ai_engine import AIEngine
+            engine = AIEngine(mock_mode=True)
         
         # Convert Pydantic models to dictionaries
         transactions_data = [

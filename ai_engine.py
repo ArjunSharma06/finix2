@@ -29,15 +29,29 @@ class AIEngine:
         """
         self.mock_mode = mock_mode
         api_key = os.getenv("GROQ_API_KEY")
+        self.client = None
         
         if not mock_mode:
             if not api_key:
-                raise ValueError("GROQ_API_KEY environment variable is required")
-            # Lazy import Groq only when needed (not in mock mode)
-            from groq import Groq
-            self.client = Groq(api_key=api_key)
-        else:
-            self.client = None
+                print("[WARNING] GROQ_API_KEY not set. Using mock mode.")
+                self.mock_mode = True
+                return
+            
+            try:
+                # Lazy import Groq only when needed (not in mock mode)
+                from groq import Groq
+                # Initialize with minimal parameters to avoid compatibility issues
+                self.client = Groq(api_key=api_key)
+            except TypeError as e:
+                # Handle version compatibility issues (like 'proxies' parameter)
+                print(f"[WARNING] Groq client initialization error: {str(e)}. Falling back to mock mode.")
+                print("[INFO] This may be due to Groq library version compatibility. Using mock suggestions.")
+                self.mock_mode = True
+                self.client = None
+            except Exception as e:
+                print(f"[WARNING] Groq client initialization failed: {str(e)}. Using mock mode.")
+                self.mock_mode = True
+                self.client = None
 
     def _analyze_transactions(
         self,
