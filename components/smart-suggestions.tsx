@@ -1,76 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Zap, ArrowRight, Lightbulb, AlertCircle, RefreshCcw } from "lucide-react"
+import { useMemo } from "react"
+import { Zap, ArrowRight, Lightbulb, AlertCircle } from "lucide-react"
 import { useFinixData } from "@/lib/data-context"
-import { calculateSuggestions } from "@/lib/api-client"
-
-interface SmartSuggestion {
-  title: string
-  description: string
-  savings: number
-  category: string
-  icon?: "alert" | "bulb" | "zap"
-}
+import { SmartSuggestion } from "@/types/suggestions"
+import { computeMonthlySummary, generateSuggestions } from "@/lib/suggestion-utils"
 
 export default function SmartSuggestions() {
   const { transactions, travelGoal } = useFinixData()
-  const [suggestions, setSuggestions] = useState<SmartSuggestion[]>([])
-  const [totalSavings, setTotalSavings] = useState(0)
-  const [activeCount, setActiveCount] = useState(0)
-  const [dismissedCount, setDismissedCount] = useState(0)
-  const [implementationProgress, setImplementationProgress] = useState("0/0")
-  const [lastUpdated, setLastUpdated] = useState("")
-  const [loading, setLoading] = useState(false)
+  
+  // Compute monthly averages over 90 days
+  const { categoryMonthlyAvg, totalMonthlySpend } = useMemo(() => 
+    computeMonthlySummary(transactions || []), 
+    [transactions]
+  )
 
-  useEffect(() => {
-    const analyzeSuggestions = async () => {
-      if (!transactions.length || !travelGoal) return
+  // Generate suggestions based on local data
+  const suggestions = useMemo(() => 
+    generateSuggestions(categoryMonthlyAvg, travelGoal),
+    [categoryMonthlyAvg, travelGoal]
+  )
 
-      setLoading(true)
-      try {
-        const response = await calculateSuggestions(transactions, travelGoal, 1)
-        
-        // Transform API response into our suggestion format
-        const transformedSuggestions: SmartSuggestion[] = response.suggestions.map((s: any) => ({
-          title: s.title,
-          description: s.description,
-          savings: parseFloat(s.potential_savings || "0"),
-          category: s.category,
-          icon: getCategoryIcon(s.category) as "alert" | "bulb" | "zap"
-        }))
-
-        setSuggestions(transformedSuggestions)
-        
-        // Calculate totals
-        const monthly = transformedSuggestions.reduce((sum, s) => sum + s.savings, 0)
-        setTotalSavings(monthly)
-        setActiveCount(transformedSuggestions.length)
-        setImplementationProgress(`${Math.floor(Math.random() * 3)}/6`) // This would come from actual tracking
-        setLastUpdated(new Date().toLocaleTimeString())
-      } catch (error) {
-        console.error("Failed to load suggestions:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    analyzeSuggestions()
-  }, [transactions, travelGoal])
-
-  const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case "sports":
-      case "dining":
-      case "food":
-        return "alert"
-      case "subscriptions":
-      case "entertainment":
-        return "bulb"
-      default:
-        return "zap"
-    }
-  }
+  const totalSavings = suggestions.reduce((sum, s) => sum + s.savings, 0)
+  const activeCount = suggestions.length
+  const dismissedCount = 0 // We're not tracking dismissals in the overview component
+  const implementationProgress = `${activeCount}/${activeCount + dismissedCount}`
+  const lastUpdated = new Date().toLocaleTimeString()
+  const loading = false
 
   const getIconComponent = (iconType?: string) => {
     switch (iconType) {
@@ -84,85 +40,68 @@ export default function SmartSuggestions() {
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-orange-500" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold">Smart Suggestions</h2>
-              <p className="text-sm text-muted-foreground">AI-powered personalized recommendations to optimize your finances</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Last updated: {lastUpdated || "Never"}</p>
-        </div>
-        <button 
-          onClick={() => window.location.reload()}
-          className="flex items-center gap-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          Refresh
-        </button>
+    <div className="bg-white rounded-xl border border-border p-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Zap className="w-5 h-5 text-primary" />
+        <h2 className="font-semibold text-foreground">Smart Suggestions</h2>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="p-4 bg-emerald-50 rounded-xl">
-          <h3 className="text-sm font-medium text-emerald-700 mb-1">Potential Monthly Savings</h3>
-          <p className="text-2xl font-bold text-emerald-700">₹{totalSavings.toFixed(2)}</p>
-          <p className="text-xs text-emerald-600">Annual savings: ₹{(totalSavings * 12).toFixed(2)}</p>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="p-3 bg-primary/10 rounded-lg">
+          <h3 className="text-sm font-medium text-primary/80 mb-1">Monthly Savings</h3>
+          <p className="text-xl font-bold text-primary">₹{totalSavings.toFixed(2)}</p>
+          <p className="text-xs text-primary/70">Annual: ₹{(totalSavings * 12).toFixed(2)}</p>
         </div>
-        <div className="p-4 bg-gray-50 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-600 mb-1">Active Suggestions</h3>
-          <p className="text-2xl font-bold text-gray-700">{activeCount}</p>
-          <p className="text-xs text-gray-500">{activeCount > 0 ? `${Math.min(activeCount, 2)} high priority` : "No active suggestions"}</p>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <h3 className="text-sm font-medium text-gray-600 mb-1">Active</h3>
+          <p className="text-xl font-bold text-gray-700">{activeCount}</p>
+          <p className="text-xs text-gray-500">{activeCount} suggestions</p>
         </div>
-        <div className="p-4 bg-gray-50 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-600 mb-1">Dismissed</h3>
-          <p className="text-2xl font-bold text-gray-700">{dismissedCount}</p>
-          <p className="text-xs text-gray-500">You can review these anytime</p>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <h3 className="text-sm font-medium text-gray-600 mb-1">Progress</h3>
+          <p className="text-xl font-bold text-gray-700">{implementationProgress}</p>
+          <p className="text-xs text-gray-500">Implemented</p>
         </div>
-        <div className="p-4 bg-gray-50 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-600 mb-1">Implementation Status</h3>
-          <p className="text-2xl font-bold text-gray-700">{implementationProgress}</p>
-          <p className="text-xs text-gray-500">Suggestions acted upon</p>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <h3 className="text-sm font-medium text-gray-600 mb-1">Updated</h3>
+          <p className="text-xl font-bold text-gray-700">{lastUpdated ? "Just now" : "-"}</p>
+          <p className="text-xs text-gray-500">Last refresh</p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="text-sm text-muted-foreground mt-2">Analyzing your spending patterns...</p>
+          <div className="text-center py-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-sm text-muted-foreground mt-2">Analyzing your finances...</p>
           </div>
         ) : suggestions.length > 0 ? (
           suggestions.map((suggestion, idx) => (
             <div
               key={idx}
-              className="p-4 bg-white rounded-lg border border-gray-100 hover:border-orange-100 transition-all duration-200 group"
+              className="p-4 bg-gradient-to-r from-muted/50 to-transparent rounded-lg hover:from-muted hover:shadow-md transition-all duration-200 group cursor-pointer border border-border/50"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mt-1">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     {getIconComponent(suggestion.icon)}
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{suggestion.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
-                    <p className="text-xs text-gray-400 mt-2">{suggestion.category}</p>
-                  </div>
+                  <span className="text-xs font-medium text-primary uppercase tracking-wide">
+                    {suggestion.category}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-emerald-600">Save ₹{suggestion.savings.toFixed(2)}</p>
-                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                  <span className="text-sm font-semibold text-primary">₹{suggestion.savings.toFixed(2)}</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
               </div>
+              <h3 className="font-semibold text-sm text-foreground mb-1">{suggestion.title}</h3>
+              <p className="text-xs text-muted-foreground">{suggestion.description}</p>
             </div>
           ))
         ) : (
-          <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">No suggestions yet. Start adding transactions to get personalized recommendations.</p>
+          <div className="text-center py-6">
+            <p className="text-sm text-muted-foreground">Add transactions to get personalized suggestions</p>
           </div>
         )}
       </div>

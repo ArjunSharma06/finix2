@@ -56,7 +56,7 @@ export default function FairSharePage() {
             <span className="text-muted-foreground text-sm">You Owe</span>
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
-          <p className="text-3xl font-bold text-red-600">${totalOwed.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-red-600">₹{totalOwed.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground mt-2">
             Across {pendingSettlements.filter((s) => s.type === "owe").length} people
           </p>
@@ -67,7 +67,7 @@ export default function FairSharePage() {
             <span className="text-muted-foreground text-sm">Owed to You</span>
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           </div>
-          <p className="text-3xl font-bold text-emerald-600">${totalOwnedToYou.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-emerald-600">₹{totalOwnedToYou.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground mt-2">
             From {pendingSettlements.filter((s) => s.type === "owed").length} people
           </p>
@@ -144,11 +144,11 @@ export default function FairSharePage() {
                 <div className="space-y-3 mb-4 pb-4 border-b border-border">
                   <div>
                     <p className="text-xs text-muted-foreground">Total Spent</p>
-                    <p className="text-xl font-bold text-foreground">${group.totalSpent.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-foreground">₹{group.totalSpent.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Your Share</p>
-                    <p className="text-lg font-semibold text-purple-600">${group.yourShare.toFixed(2)}</p>
+                    <p className="text-lg font-semibold text-purple-600">₹{group.yourShare.toFixed(2)}</p>
                   </div>
                 </div>
                 <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors font-medium">
@@ -179,7 +179,7 @@ export default function FairSharePage() {
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ₹{
                       settlement.type === "owe"
                         ? "bg-red-500"
                         : settlement.type === "owed"
@@ -196,7 +196,7 @@ export default function FairSharePage() {
                 </div>
                 <div className="text-right">
                   <p
-                    className={`font-semibold ${
+                    className={`font-semibold ₹{
                       settlement.type === "owe"
                         ? "text-red-600"
                         : settlement.type === "owed"
@@ -204,7 +204,7 @@ export default function FairSharePage() {
                           : "text-slate-500"
                     }`}
                   >
-                    {settlement.type === "owe" ? "-" : settlement.type === "owed" ? "+" : ""}${settlement.amount}
+                    {settlement.type === "owe" ? "-" : settlement.type === "owed" ? "+" : ""}₹{settlement.amount}
                   </p>
                   {settlement.type === "settled" ? (
                     <p className="text-xs text-slate-500">Settled</p>
@@ -234,7 +234,7 @@ export default function FairSharePage() {
                     {expense.group} • Added by {expense.addedBy} on {expense.date}
                   </p>
                 </div>
-                <p className="text-lg font-semibold text-foreground">${expense.amount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-foreground">₹{expense.amount.toFixed(2)}</p>
               </div>
             ))}
           </div>

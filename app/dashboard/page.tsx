@@ -4,7 +4,7 @@ import { useState } from "react"
 import Sidebar from "@/components/sidebar"
 import MainContent from "@/components/main-content"
 import RightSidebar from "@/components/right-sidebar"
-import { Menu, LogOut } from "lucide-react"
+import { Menu, LogOut, Zap } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
@@ -48,7 +48,35 @@ export default function Dashboard() {
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-auto flex gap-6 bg-gradient-to-br from-blue-100 to-blue-50 p-6">
-          <MainContent />
+            <div className="flex-1 space-y-6">
+              {/* Quick Stats */}
+              <div className="bg-white rounded-xl border border-border p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-primary" />
+                  </div>
+                  <h2 className="font-semibold text-foreground">Quick Insights</h2>
+                </div>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gradient-to-r from-muted/50 to-transparent rounded-lg border border-border/50">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs font-medium text-primary">Subscription Overlap</span>
+                      <span className="text-xs font-semibold text-emerald-600">Save ₹299/mo</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Consolidate streaming services to optimize spending</p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-r from-muted/50 to-transparent rounded-lg border border-border/50">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs font-medium text-primary">Food Delivery</span>
+                      <span className="text-xs font-semibold text-emerald-600">Save ₹450/mo</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Switch to subscription plans for better value</p>
+                  </div>
+                </div>
+              </div>
+              {/* Main Content Component */}
+              <MainContent />
+            </div>
           <RightSidebar />
         </div>
       </div>
