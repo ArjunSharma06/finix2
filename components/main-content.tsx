@@ -1,72 +1,298 @@
 "use client"
 
+import { useState, useMemo, useEffect } from "react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import TransactionTable from "./transaction-table"
-
-const spendingData = [
-  { month: "Jan", amount: 28500, budget: 35000 },
-  { month: "Feb", amount: 31200, budget: 35000 },
-  { month: "Mar", amount: 26500, budget: 35000 },
-  { month: "Apr", amount: 38900, budget: 35000 },
-  { month: "May", amount: 34200, budget: 35000 },
-  { month: "Jun", amount: 37400, budget: 35000 },
-  { month: "Jul", amount: 41200, budget: 35000 },
-  { month: "Aug", amount: 35600, budget: 35000 },
-]
+import { Settings, IndianRupee } from "lucide-react"
+import { useFinixData } from "@/lib/data-context"
 
 export default function MainContent() {
-  const currentMonth = spendingData[spendingData.length - 1]
-  const previousMonth = spendingData[spendingData.length - 2]
-  const percentageChange = (((currentMonth.amount - previousMonth.amount) / previousMonth.amount) * 100).toFixed(1)
+  const { balance, setBalance, transactions, monthlyBudget, setMonthlyBudget } = useFinixData()
+  const [showForm, setShowForm] = useState(false)
+  const [formBalance, setFormBalance] = useState<string>("")
+  const [formBudget, setFormBudget] = useState<string>("")
+  const [mounted, setMounted] = useState(false)
+  const [timeRange, setTimeRange] = useState<"3M" | "6M" | "1Y">("3M")
+
+  // Fix hydration issue
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Calculate spending from transactions
+  const totalSpending = transactions.reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Calculate current month spending (transactions from current month)
+  const currentMonthSpending = useMemo(() => {
+    if (!mounted) return 0 // Return 0 during SSR to avoid hydration mismatch
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    
+    return transactions
+      .filter((tx) => {
+        const txDate = new Date(tx.date)
+        return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear
+      })
+      .reduce((sum, tx) => sum + tx.amount, 0)
+  }, [transactions, mounted])
+
+  // Calculate previous month spending
+  const previousMonthSpending = useMemo(() => {
+    if (!mounted) return 0 // Return 0 during SSR to avoid hydration mismatch
+    const now = new Date()
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    
+    return transactions
+      .filter((tx) => {
+        const txDate = new Date(tx.date)
+        return txDate.getMonth() === prevMonth && txDate.getFullYear() === prevYear
+      })
+      .reduce((sum, tx) => sum + tx.amount, 0)
+  }, [transactions, mounted])
+
+  // Calculate percentage change
+  const percentageChange = previousMonthSpending > 0
+    ? (((currentMonthSpending - previousMonthSpending) / previousMonthSpending) * 100).toFixed(1)
+    : "0.0"
+
+  // Generate spending data for graph based on selected time range (3M, 6M, 1Y)
+  const spendingData = useMemo(() => {
+    const months: { month: string; amount: number; budget: number }[] = []
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const now = new Date()
+
+    // Determine how many months to show
+    const monthsToShow = timeRange === "3M" ? 3 : timeRange === "6M" ? 6 : 12
+
+    for (let i = monthsToShow - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = monthNames[date.getMonth()]
+      const monthNum = date.getMonth()
+      const year = date.getFullYear()
+
+      const monthSpending = transactions
+        .filter((tx) => {
+          const txDate = new Date(tx.date)
+          return txDate.getMonth() === monthNum && txDate.getFullYear() === year
+        })
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      months.push({
+        month,
+        amount: monthSpending,
+        budget: monthlyBudget,
+      })
+    }
+
+    return months
+  }, [transactions, monthlyBudget, timeRange])
+
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (formBalance) {
+      setBalance(parseFloat(formBalance) || 0)
+    }
+    if (formBudget) {
+      setMonthlyBudget(parseFloat(formBudget) || 3500)
+    }
+    setShowForm(false)
+    setFormBalance("")
+    setFormBudget("")
+  }
 
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6">
       {/* Welcome Header with Animation */}
-      <div className="space-y-1 animate-fade-in">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, Sarah!</h1>
-        <p className="text-muted-foreground">Here's your financial overview for August</p>
+      <div className="space-y-1 animate-fade-in flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Welcome back, User!</h1>
+          <p className="text-muted-foreground">Here's your financial overview</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
+        >
+          <Settings className="w-4 h-4" />
+          Set Budget
+        </button>
       </div>
+
+      {/* Budget & Balance Form (Round 1 Prototype) */}
+      {showForm && (
+        <div id="budget-form" className="bg-white rounded-xl border border-border p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <IndianRupee className="w-5 h-5" />
+            Set Your Financial Goals
+          </h3>
+          <form onSubmit={handleSubmitForm} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Current Balance (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formBalance}
+                  onChange={(e) => setFormBalance(e.target.value)}
+                  placeholder={balance.toString()}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Monthly Budget (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formBudget}
+                  onChange={(e) => setFormBudget(e.target.value)}
+                  placeholder={monthlyBudget.toString()}
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setFormBalance("")
+                  setFormBudget("")
+                }}
+                className="px-6 py-2 bg-white border-2 border-slate-200 text-slate-900 rounded-lg hover:border-slate-300 hover:shadow-md transition-all font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+          {balance > 0 && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                Current Balance: <span className="font-semibold text-foreground">₹{balance.toLocaleString()}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick Stats Row */}
       <div className="grid grid-cols-3 gap-4">
         {/* Current Month Spending */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">This Month</p>
-          <p className="text-2xl font-bold text-foreground">₹{currentMonth.amount.toLocaleString("en-IN")}</p>
-          <p className={`text-xs mt-2 ${percentageChange > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
-            {percentageChange > 0 ? "+" : ""}
-            {percentageChange}% from last month
-          </p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">₹{currentMonthSpending.toLocaleString()}</p>
+              <p className={`text-xs mt-2 ${parseFloat(percentageChange) > 0 ? "text-red-500" : "text-green-500"} font-medium`}>
+                {parseFloat(percentageChange) > 0 ? "+" : ""}
+                {percentageChange}% from last month
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
 
         {/* Budget */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Budget</p>
-          <p className="text-2xl font-bold text-foreground">₹{currentMonth.budget.toLocaleString("en-IN")}</p>
-          <p className="text-xs mt-2 text-green-600 font-medium">
-            ₹{(currentMonth.budget - currentMonth.amount).toLocaleString("en-IN")} remaining
-          </p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">₹{monthlyBudget.toLocaleString()}</p>
+              <p className={`text-xs mt-2 ${(monthlyBudget - currentMonthSpending) >= 0 ? "text-green-600" : "text-red-500"} font-medium`}>
+                ₹{Math.abs(monthlyBudget - currentMonthSpending).toLocaleString()} {monthlyBudget - currentMonthSpending >= 0 ? "remaining" : "over budget"}
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    // Open the Set Budget form and prefill with current monthly budget
+                    setFormBudget(monthlyBudget ? monthlyBudget.toString() : "")
+                    setShowForm(true)
+                    // Scroll to form when it becomes visible
+                    setTimeout(() => {
+                      const el = document.getElementById('budget-form')
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 100)
+                  }}
+                  className="text-xs px-3 py-1 rounded-md font-medium bg-white border border-slate-200 hover:shadow-sm"
+                >
+                  Adjust Goal
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
 
-        {/* Year Total */}
-        <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Year to Date</p>
-          <p className="text-2xl font-bold text-foreground">
-            ₹{spendingData.reduce((sum, d) => sum + d.amount, 0).toLocaleString("en-IN")}
-          </p>
-          <p className="text-xs mt-2 text-muted-foreground font-medium">8 months tracked</p>
+        {/* Total Spending */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Total Spending</p>
+          {mounted ? (
+            <>
+              <p className="text-2xl font-bold text-foreground">
+                ₹{totalSpending.toLocaleString()}
+              </p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">{transactions.length} transactions</p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-foreground">₹0</p>
+              <p className="text-xs mt-2 text-muted-foreground font-medium">Loading...</p>
+            </>
+          )}
         </div>
       </div>
 
       {/* Spending Overview Chart */}
-      <div className="bg-white rounded-xl border border-border p-6 space-y-4 hover:shadow-lg transition-all duration-300">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 hover:shadow-lg transition-all duration-300">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Spending Trends</h2>
           <div className="flex gap-2">
-            <button className="text-xs px-3 py-1 bg-primary text-primary-foreground rounded-md font-medium transition-all hover:opacity-90">
+            <button 
+              onClick={() => setTimeRange("3M")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "3M"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
               3M
             </button>
-            <button className="text-xs px-3 py-1 bg-muted text-foreground rounded-md font-medium hover:bg-muted/80 transition-all">
+            <button 
+              onClick={() => setTimeRange("6M")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "6M"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
+              6M
+            </button>
+            <button 
+              onClick={() => setTimeRange("1Y")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${
+                timeRange === "1Y"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                  : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
+              }`}
+            >
               1Y
             </button>
           </div>
@@ -94,7 +320,7 @@ export default function MainContent() {
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
-              formatter={(value) => `₹${value.toLocaleString("en-IN")}`}
+              formatter={(value) => `₹${value.toLocaleString()}`}
             />
             <Area
               type="monotone"

@@ -1,0 +1,577 @@
+"""
+FastAPI main application for FINIX backend.
+Entry point for all API endpoints and CORS configuration.
+"""
+
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from datetime import date
+from dotenv import load_dotenv
+import os
+from pydantic import BaseModel
+from fastapi import Body
+
+# Import travel routes
+from travel_routes import register_travel_routes
+
+# Load environment variables from .env file
+load_dotenv()
+
+from database import get_db, init_db, engine
+from models import Base, User, Transaction, TravelGoal
+from schemas import (
+    UserCreate, UserResponse,
+    TransactionCreate, TransactionResponse,
+    TravelGoalCreate, TravelGoalUpdate, TravelGoalResponse,
+    AISuggestionResponse,
+    SuggestionsCalculateRequest, TransactionsSummaryRequest,
+    StatelessTransactionInput
+)
+from ai_engine import AIEngine
+from lib.utils import generateTravelSuggestions as generate_travel_suggestions_ai
+
+# Create FastAPI app instance
+app = FastAPI(
+    title="FINIX API",
+    description="AI-Powered Financial & Travel Platform Backend",
+    version="1.0.0"
+)
+
+# Add error handlers
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    print(f"\nGlobal error handler caught: {type(exc)}")
+    print(f"Error message: {str(exc)}")
+    import traceback
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)}
+    )
+
+# Register travel routes
+print("\nRegistering travel routes...")
+register_travel_routes(app)
+
+# Configure CORS for Next.js frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Next.js default port (local dev)
+        "http://localhost:3001",  # Alternative Next.js port
+        "http://localhost:5173",  # Vite default port
+        "https://finix9.vercel.app",  # Production frontend (Vercel)
+        "https://*.vercel.app",  # All Vercel preview deployments
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# AI Engine instance (lazy initialization)
+ai_engine: Optional[AIEngine] = None
+
+def get_ai_engine() -> Optional[AIEngine]:
+    """Get or create AI Engine instance (lazy initialization)."""
+    global ai_engine
+    if ai_engine is None:
+        try:
+            ai_engine = AIEngine()
+        except ValueError as e:
+            # If API key is missing, return None (will use mock mode)
+            print(f"Warning: {e}. AI suggestions will fall back to mock responses.")
+            ai_engine = None
+    return ai_engine
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on application startup."""
+    db_initialized = init_db()
+    if not db_initialized:
+        print("[INFO] Running in database-less mode. Some endpoints may not work.")
+
+
+# Health Check Endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify API is running."""
+    from database import check_db_connection, SKIP_DB_INIT
+    
+    db_status = "connected" if check_db_connection() else "disconnected"
+    if SKIP_DB_INIT:
+        db_status = "skipped"
+    
+    return {
+        "status": "healthy",
+        "service": "FINIX API",
+        "database": db_status,
+        "version": "1.0.0"
+    }
+
+
+# ==================== USER ENDPOINTS ====================
+
+@app.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    """
+    Create a new user account.
+    
+    Args:
+        user: User creation data
+        db: Database session
+        
+    Returns:
+        Created user object
+    """
+    # Check if username already exists
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists"
+        )
+    
+    db_user = User(**user.dict())
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@app.get("/users/{user_id}", response_model=UserResponse)
+async def get_user(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get user by ID.
+    
+    Args:
+        user_id: User ID
+        db: Database session
+        
+    Returns:
+        User object
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {user_id} not found"
+        )
+    return user
+
+
+@app.get("/users/", response_model=List[UserResponse])
+async def list_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    List all users with pagination.
+    
+    Args:
+        skip: Number of records to skip
+        limit: Maximum number of records to return
+        db: Database session
+        
+    Returns:
+        List of user objects
+    """
+    users = db.query(User).offset(skip).limit(limit).all()
+    return users
+
+
+# ==================== TRANSACTION ENDPOINTS ====================
+
+@app.post("/transactions/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+async def create_transaction(transaction: TransactionCreate, db: Session = Depends(get_db)):
+    """
+    Create a new transaction record.
+    
+    Args:
+        transaction: Transaction creation data
+        db: Database session
+        
+    Returns:
+        Created transaction object
+    """
+    # Verify user exists
+    user = db.query(User).filter(User.id == transaction.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {transaction.user_id} not found"
+        )
+    
+    db_transaction = Transaction(**transaction.dict())
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+
+@app.get("/transactions/{user_id}", response_model=List[TransactionResponse])
+async def get_transactions(
+    user_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    start_date: date = None,
+    end_date: date = None,
+    category: str = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all transactions for a specific user.
+    
+    Args:
+        user_id: User ID
+        skip: Number of records to skip
+        limit: Maximum number of records to return
+        start_date: Optional start date filter
+        end_date: Optional end date filter
+        category: Optional category filter
+        db: Database session
+        
+    Returns:
+        List of transaction objects
+    """
+    # Verify user exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {user_id} not found"
+        )
+    
+    query = db.query(Transaction).filter(Transaction.user_id == user_id)
+    
+    # Apply filters
+    if start_date:
+        query = query.filter(Transaction.date >= start_date)
+    if end_date:
+        query = query.filter(Transaction.date <= end_date)
+    if category:
+        query = query.filter(Transaction.category == category)
+    
+    transactions = query.order_by(Transaction.date.desc()).offset(skip).limit(limit).all()
+    return transactions
+
+
+@app.get("/transactions/{user_id}/summary")
+async def get_transaction_summary(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get transaction summary statistics for a user.
+    
+    Args:
+        user_id: User ID
+        db: Database session
+        
+    Returns:
+        Summary statistics
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {user_id} not found"
+        )
+    
+    transactions = db.query(Transaction).filter(Transaction.user_id == user_id).all()
+    
+    if not transactions:
+        return {
+            "total_transactions": 0,
+            "total_amount": 0,
+            "average_amount": 0,
+            "categories": {}
+        }
+    
+    total_amount = sum(float(t.amount) for t in transactions)
+    categories = {}
+    for t in transactions:
+        categories[t.category] = categories.get(t.category, 0) + float(t.amount)
+    
+    return {
+        "total_transactions": len(transactions),
+        "total_amount": total_amount,
+        "average_amount": total_amount / len(transactions) if transactions else 0,
+        "categories": categories
+    }
+
+
+# ==================== TRAVEL GOAL ENDPOINTS ====================
+
+@app.post("/travel-goals/", response_model=TravelGoalResponse, status_code=status.HTTP_201_CREATED)
+async def create_travel_goal(goal: TravelGoalCreate, db: Session = Depends(get_db)):
+    """
+    Create a new travel goal.
+    
+    Args:
+        goal: Travel goal creation data
+        db: Database session
+        
+    Returns:
+        Created travel goal object
+    """
+    # Verify user exists
+    user = db.query(User).filter(User.id == goal.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {goal.user_id} not found"
+        )
+    
+    db_goal = TravelGoal(**goal.dict())
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
+
+
+@app.get("/travel-goals/{user_id}", response_model=List[TravelGoalResponse])
+async def get_travel_goals(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get all travel goals for a specific user.
+    
+    Args:
+        user_id: User ID
+        db: Database session
+        
+    Returns:
+        List of travel goal objects
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID {user_id} not found"
+        )
+    
+    goals = db.query(TravelGoal).filter(TravelGoal.user_id == user_id).order_by(TravelGoal.created_at.desc()).all()
+    return goals
+
+
+@app.get("/travel-goals/{user_id}/{goal_id}", response_model=TravelGoalResponse)
+async def get_travel_goal(user_id: int, goal_id: int, db: Session = Depends(get_db)):
+    """
+    Get a specific travel goal.
+    
+    Args:
+        user_id: User ID
+        goal_id: Travel goal ID
+        db: Database session
+        
+    Returns:
+        Travel goal object
+    """
+    goal = db.query(TravelGoal).filter(
+        TravelGoal.id == goal_id,
+        TravelGoal.user_id == user_id
+    ).first()
+    
+    if not goal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Travel goal with ID {goal_id} not found for user {user_id}"
+        )
+    
+    return goal
+
+
+@app.put("/travel-goals/{user_id}/{goal_id}", response_model=TravelGoalResponse)
+async def update_travel_goal(
+    user_id: int,
+    goal_id: int,
+    goal_update: TravelGoalUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update an existing travel goal.
+    
+    Args:
+        user_id: User ID
+        goal_id: Travel goal ID
+        goal_update: Updated travel goal data
+        db: Database session
+        
+    Returns:
+        Updated travel goal object
+    """
+    goal = db.query(TravelGoal).filter(
+        TravelGoal.id == goal_id,
+        TravelGoal.user_id == user_id
+    ).first()
+    
+    if not goal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Travel goal with ID {goal_id} not found for user {user_id}"
+        )
+    
+    # Update only provided fields
+    update_data = goal_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(goal, field, value)
+    
+    db.commit()
+    db.refresh(goal)
+    return goal
+
+
+@app.delete("/travel-goals/{user_id}/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_travel_goal(user_id: int, goal_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a travel goal.
+    
+    Args:
+        user_id: User ID
+        goal_id: Travel goal ID
+        db: Database session
+    """
+    goal = db.query(TravelGoal).filter(
+        TravelGoal.id == goal_id,
+        TravelGoal.user_id == user_id
+    ).first()
+    
+    if not goal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Travel goal with ID {goal_id} not found for user {user_id}"
+        )
+    
+    db.delete(goal)
+    db.commit()
+    return None
+
+
+# Suggestions are now computed client-side
+
+@app.post("/transactions/summary")
+async def get_transaction_summary_stateless(request: TransactionsSummaryRequest):
+    """
+    Calculate transaction summary statistics from provided data (stateless - no database).
+    
+    This endpoint accepts a list of transactions and returns summary statistics.
+    Used for Round 1 Prototype with manual data input.
+    
+    Args:
+        request: Contains list of transactions
+        
+    Returns:
+        Summary statistics (total, average, categories breakdown)
+    """
+    try:
+        if not request.transactions:
+            return {
+                "total_transactions": 0,
+                "total_amount": 0,
+                "average_amount": 0,
+                "categories": {}
+            }
+        
+        total_amount = sum(float(t.amount) for t in request.transactions)
+        categories = {}
+        
+        for t in request.transactions:
+            category = t.category
+            amount = float(t.amount)
+            categories[category] = categories.get(category, 0) + amount
+        
+        return {
+            "total_transactions": len(request.transactions),
+            "total_amount": total_amount,
+            "average_amount": total_amount / len(request.transactions) if request.transactions else 0,
+            "categories": categories
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error calculating summary: {str(e)}"
+        )
+
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "message": "Welcome to FINIX API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
+# --------- Travel suggestions (ad-hoc AI) API ---------
+
+
+class TravelSuggestionsRequest(BaseModel):
+    destination: str
+    budgets: dict = {}
+
+
+@app.post("/travel/suggestions")
+async def travel_suggestions(request: TravelSuggestionsRequest = Body(...)):
+    """Generate travel suggestions (synchronous call to AI utils).
+
+    Body: { destination: str, budgets: { category: number } }
+    Returns: list of suggestion objects (as generated by the AI util)
+    """
+    if not request.destination:
+        raise HTTPException(status_code=400, detail="destination is required")
+    # If the Google API key is not set, return a deterministic mock so frontend works in dev
+    if not os.getenv('GOOGLE_API_KEY'):
+        mock = []
+        cats = ['accommodation', 'flight', 'restaurant', 'activity']
+        for i in range(8):
+            cat = cats[i % len(cats)]
+            budget_val = 1000 + (i * 500)
+            mock.append({
+                'name': f'Mock {cat.title()} Option {i+1}',
+                'category': cat,
+                'price': min(budget_val, request.budgets.get(cat.title(), budget_val)),
+                'priceLabel': 'per night' if cat == 'accommodation' else ('round trip' if cat == 'flight' else 'per person'),
+                'rating': 4.0,
+                'description': f'A placeholder {cat} suggestion for {request.destination}.',
+                'features': ['feature1', 'feature2', 'feature3'],
+                'location': request.destination if cat in ('accommodation','restaurant') else None,
+                'imageUrl': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+                'airline': 'MockAir' if cat == 'flight' else None,
+                'timing': '09:00 - 18:00' if cat in ('activity','flight') else None,
+                'cuisine': 'International' if cat == 'restaurant' else None
+            })
+        return {"suggestions": mock}
+
+    try:
+        suggestions = generate_travel_suggestions_ai(request.destination, request.budgets or {})
+        return {"suggestions": suggestions}
+    except Exception as e:
+        # Log error
+        print(f"Error generating travel suggestions: {e}")
+        msg = str(e)
+        # If the Google API key is missing, return a lightweight mock result so the frontend can still function in dev
+        if 'Google API key not found' in msg or 'Google API key' in msg:
+            mock = []
+            # create 8 simple mock suggestions using provided budgets
+            cats = ['accommodation', 'flight', 'restaurant', 'activity']
+            for i in range(8):
+                cat = cats[i % len(cats)]
+                budget_val = 1000 + (i * 500)
+                mock.append({
+                    'name': f'Mock {cat.title()} Option {i+1}',
+                    'category': cat,
+                    'price': min(budget_val, request.budgets.get(cat.title(), budget_val)),
+                    'priceLabel': 'per night' if cat == 'accommodation' else ('round trip' if cat == 'flight' else 'per person'),
+                    'rating': 4.0,
+                    'description': f'A placeholder {cat} suggestion for {request.destination}.',
+                    'features': ['feature1', 'feature2', 'feature3'],
+                    'location': request.destination if cat in ('accommodation','restaurant') else None,
+                    'imageUrl': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+                    'airline': 'MockAir' if cat == 'flight' else None,
+                    'timing': '09:00 - 18:00' if cat in ('activity','flight') else None,
+                    'cuisine': 'International' if cat == 'restaurant' else None
+                })
+            return {"suggestions": mock}
+        # Otherwise return 500
+        raise HTTPException(status_code=500, detail=str(e))
+

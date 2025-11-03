@@ -37,13 +37,13 @@ export default function FairSharePage() {
   const totalOwnedToYou = pendingSettlements.filter((s) => s.type === "owed").reduce((sum, s) => sum + s.amount, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-foreground flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
-          </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+              <Users className="w-6 h-6 text-white" />
+            </div>
           FairShare
         </h1>
         <p className="text-muted-foreground">Split expenses fairly with friends and groups</p>
@@ -56,7 +56,7 @@ export default function FairSharePage() {
             <span className="text-muted-foreground text-sm">You Owe</span>
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
-          <p className="text-3xl font-bold text-red-600">${totalOwed.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-red-600">₹{totalOwed.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground mt-2">
             Across {pendingSettlements.filter((s) => s.type === "owe").length} people
           </p>
@@ -67,7 +67,7 @@ export default function FairSharePage() {
             <span className="text-muted-foreground text-sm">Owed to You</span>
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           </div>
-          <p className="text-3xl font-bold text-emerald-600">${totalOwnedToYou.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-emerald-600">₹{totalOwnedToYou.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground mt-2">
             From {pendingSettlements.filter((s) => s.type === "owed").length} people
           </p>
@@ -91,8 +91,8 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("groups")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "groups"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-              : "bg-white border border-border text-foreground hover:bg-muted"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+              : "bg-white border border-slate-200 text-slate-900 hover:shadow-md"
           }`}
         >
           Active Groups
@@ -101,7 +101,7 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("settlements")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "settlements"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
               : "bg-white border border-border text-foreground hover:bg-muted"
           }`}
         >
@@ -111,7 +111,7 @@ export default function FairSharePage() {
           onClick={() => setActiveTab("history")}
           className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
             activeTab === "history"
-              ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
               : "bg-white border border-border text-foreground hover:bg-muted"
           }`}
         >
@@ -134,7 +134,7 @@ export default function FairSharePage() {
                     {Array.from({ length: group.members }).map((_, i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                        className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
                       >
                         {String.fromCharCode(65 + i)}
                       </div>
@@ -144,11 +144,11 @@ export default function FairSharePage() {
                 <div className="space-y-3 mb-4 pb-4 border-b border-border">
                   <div>
                     <p className="text-xs text-muted-foreground">Total Spent</p>
-                    <p className="text-xl font-bold text-foreground">${group.totalSpent.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-foreground">₹{group.totalSpent.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Your Share</p>
-                    <p className="text-lg font-semibold text-purple-600">${group.yourShare.toFixed(2)}</p>
+                    <p className="text-lg font-semibold text-purple-600">₹{group.yourShare.toFixed(2)}</p>
                   </div>
                 </div>
                 <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors font-medium">
@@ -179,7 +179,7 @@ export default function FairSharePage() {
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ₹{
                       settlement.type === "owe"
                         ? "bg-red-500"
                         : settlement.type === "owed"
@@ -196,7 +196,7 @@ export default function FairSharePage() {
                 </div>
                 <div className="text-right">
                   <p
-                    className={`font-semibold ${
+                    className={`font-semibold ₹{
                       settlement.type === "owe"
                         ? "text-red-600"
                         : settlement.type === "owed"
@@ -204,7 +204,7 @@ export default function FairSharePage() {
                           : "text-slate-500"
                     }`}
                   >
-                    {settlement.type === "owe" ? "-" : settlement.type === "owed" ? "+" : ""}${settlement.amount}
+                    {settlement.type === "owe" ? "-" : settlement.type === "owed" ? "+" : ""}₹{settlement.amount}
                   </p>
                   {settlement.type === "settled" ? (
                     <p className="text-xs text-slate-500">Settled</p>
@@ -234,7 +234,7 @@ export default function FairSharePage() {
                     {expense.group} • Added by {expense.addedBy} on {expense.date}
                   </p>
                 </div>
-                <p className="text-lg font-semibold text-foreground">${expense.amount.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-foreground">₹{expense.amount.toFixed(2)}</p>
               </div>
             ))}
           </div>

@@ -1,0 +1,25 @@
+# FINIX Backend Environment Variables
+# Copy this file to .env and fill in your values
+
+# Database Configuration
+# Format: postgresql://username:password@host:port/database_name
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/finix_db
+
+# OpenAI API Configuration (Required for AI suggestions)
+# Get your API key from: https://platform.openai.com/api-keys
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Google Gemini / Generative AI API Key
+# If you plan to use Google Gemini for AI suggestions, set this variable to
+# your Gemini API key. Example:
+# GOOGLE_API_KEY=AIzaSy...
+GOOGLE_API_KEY=
+
+# Optional: Server Configuration
+HOST=0.0.0.0
+PORT=8000
+
+# Optional: Skip Database Initialization (for testing without DB)
+# Set to "true" to skip database connection and table creation
+SKIP_DB_INIT=false
+

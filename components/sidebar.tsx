@@ -1,6 +1,6 @@
 "use client"
 
-import { PieChart, Wallet, Users, Plane, Lightbulb, LogOut } from "lucide-react"
+import { PieChart, Wallet, Users, Plane, Lightbulb, Zap } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -30,8 +30,8 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
-        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-md flex items-center justify-center hover:shadow-md transition-all duration-200 flex-shrink-0">
-          <span className="text-white font-bold text-lg">₹</span>
+        <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-md flex items-center justify-center hover:shadow-md transition-all duration-200 flex-shrink-0">
+          <Zap className="w-5 h-5 text-white" />
         </div>
         {shouldShow && <span className="font-bold text-lg text-foreground">FINIX</span>}
       </div>
@@ -47,7 +47,7 @@ export default function Sidebar() {
               onClick={() => setIsCollapsed(true)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md"
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
                   : "text-foreground hover:bg-muted/80"
               } ${!shouldShow ? "justify-center px-3" : ""}`}
               title={!shouldShow ? item.label : ""}
@@ -59,17 +59,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border pt-6">
-        <button
-          className={`w-full flex items-center gap-3 px-4 py-3 text-foreground hover:bg-muted rounded-lg transition-all duration-200 ${
-            !shouldShow ? "justify-center px-3" : ""
-          }`}
-          title={!shouldShow ? "Logout" : ""}
-        >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {shouldShow && <span className="font-medium whitespace-nowrap">Logout</span>}
-        </button>
-      </div>
     </div>
   )
 }
